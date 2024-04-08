@@ -1,0 +1,23 @@
+[1.572s] Invoking command in '/home/michal/ros2_ws/src/py_pubsub': PYTHONPATH=/home/michal/ros2_ws/src/build/py_pubsub/prefix_override:/home/michal/ros2_ws/src/install/py_pubsub/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../build/py_pubsub build --build-base /home/michal/ros2_ws/src/build/py_pubsub/build install --record /home/michal/ros2_ws/src/build/py_pubsub/install.log --single-version-externally-managed install_data
+[2.099s] running egg_info
+[2.130s] writing ../build/py_pubsub/py_pubsub.egg-info/PKG-INFO
+[2.130s] writing dependency_links to ../build/py_pubsub/py_pubsub.egg-info/dependency_links.txt
+[2.130s] writing requirements to ../build/py_pubsub/py_pubsub.egg-info/requires.txt
+[2.130s] writing top-level names to ../build/py_pubsub/py_pubsub.egg-info/top_level.txt
+[2.328s] reading manifest file '../build/py_pubsub/py_pubsub.egg-info/SOURCES.txt'
+[2.329s] writing manifest file '../build/py_pubsub/py_pubsub.egg-info/SOURCES.txt'
+[2.329s] running build
+[2.329s] running build_py
+[2.329s] copying py_pubsub/publisher_member_function.py -> /home/michal/ros2_ws/src/build/py_pubsub/build/lib/py_pubsub
+[2.329s] running install
+[2.335s] running install_lib
+[2.366s] copying /home/michal/ros2_ws/src/build/py_pubsub/build/lib/py_pubsub/publisher_member_function.py -> /home/michal/ros2_ws/src/install/py_pubsub/lib/python3.8/site-packages/py_pubsub
+[2.368s] byte-compiling /home/michal/ros2_ws/src/install/py_pubsub/lib/python3.8/site-packages/py_pubsub/publisher_member_function.py to publisher_member_function.cpython-38.pyc
+[2.368s] running install_data
+[2.369s] copying package.xml -> /home/michal/ros2_ws/src/install/py_pubsub/share/py_pubsub
+[2.369s] running install_egg_info
+[2.400s] removing '/home/michal/ros2_ws/src/install/py_pubsub/lib/python3.8/site-packages/py_pubsub-0.0.0-py3.8.egg-info' (and everything under it)
+[2.401s] Copying ../build/py_pubsub/py_pubsub.egg-info to /home/michal/ros2_ws/src/install/py_pubsub/lib/python3.8/site-packages/py_pubsub-0.0.0-py3.8.egg-info
+[2.401s] running install_scripts
+[2.509s] writing list of installed files to '/home/michal/ros2_ws/src/build/py_pubsub/install.log'
+[2.539s] Invoked command in '/home/michal/ros2_ws/src/py_pubsub' returned '0': PYTHONPATH=/home/michal/ros2_ws/src/build/py_pubsub/prefix_override:/home/michal/ros2_ws/src/install/py_pubsub/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated setup.py egg_info --egg-base ../build/py_pubsub build --build-base /home/michal/ros2_ws/src/build/py_pubsub/build install --record /home/michal/ros2_ws/src/build/py_pubsub/install.log --single-version-externally-managed install_data

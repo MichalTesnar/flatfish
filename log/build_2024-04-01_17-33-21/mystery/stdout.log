@@ -1,0 +1,30 @@
+running egg_info
+creating ../build/mystery/mystery.egg-info
+writing ../build/mystery/mystery.egg-info/PKG-INFO
+writing dependency_links to ../build/mystery/mystery.egg-info/dependency_links.txt
+writing requirements to ../build/mystery/mystery.egg-info/requires.txt
+writing top-level names to ../build/mystery/mystery.egg-info/top_level.txt
+writing manifest file '../build/mystery/mystery.egg-info/SOURCES.txt'
+reading manifest file '../build/mystery/mystery.egg-info/SOURCES.txt'
+writing manifest file '../build/mystery/mystery.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/michal/ros2_ws/src/build/mystery/build
+creating /home/michal/ros2_ws/src/build/mystery/build/lib
+creating /home/michal/ros2_ws/src/build/mystery/build/lib/mystery
+copying mystery/__init__.py -> /home/michal/ros2_ws/src/build/mystery/build/lib/mystery
+running install
+running install_lib
+creating /home/michal/ros2_ws/src/install/mystery/lib/python3.8/site-packages/mystery
+copying /home/michal/ros2_ws/src/build/mystery/build/lib/mystery/__init__.py -> /home/michal/ros2_ws/src/install/mystery/lib/python3.8/site-packages/mystery
+byte-compiling /home/michal/ros2_ws/src/install/mystery/lib/python3.8/site-packages/mystery/__init__.py to __init__.cpython-38.pyc
+running install_data
+creating /home/michal/ros2_ws/src/install/mystery/share/ament_index
+creating /home/michal/ros2_ws/src/install/mystery/share/ament_index/resource_index
+creating /home/michal/ros2_ws/src/install/mystery/share/ament_index/resource_index/packages
+copying resource/mystery -> /home/michal/ros2_ws/src/install/mystery/share/ament_index/resource_index/packages
+copying package.xml -> /home/michal/ros2_ws/src/install/mystery/share/mystery
+running install_egg_info
+Copying ../build/mystery/mystery.egg-info to /home/michal/ros2_ws/src/install/mystery/lib/python3.8/site-packages/mystery-0.0.0-py3.8.egg-info
+running install_scripts
+writing list of installed files to '/home/michal/ros2_ws/src/build/mystery/install.log'
