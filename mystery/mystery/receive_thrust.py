@@ -3,8 +3,7 @@ from rclpy.node import Node
 from rclpy.time import Time
 
 from flatfish_msgs.msg import TrainingData
-# from flatfish_msgs.msg import ThrusterStatus
-from thruster_enitech.msg import ThrusterStatus
+from flatfish_msgs.msg import ThrusterStatus
 from flatfish_msgs.msg import ThrusterSpeeds
 from nav_msgs.msg import Odometry
 
