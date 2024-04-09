@@ -22,7 +22,7 @@ class Receiver(Node):
 
         self._odometry_subscription = message_filters.Subscriber(self, Odometry, 'flatfish/odometry')
 
-        self._synchronizer = message_filters.ApproximateTimeSynchronizer([self._thruster_surge_left_subscription, self._odometry_subscription], 10, 0.2, allow_headerless=False)
+        self._synchronizer = message_filters.ApproximateTimeSynchronizer([self._thruster_surge_left_subscription, self._odometry_subscription], 10, 0.2, allow_headerless=True)
 
         self._synchronizer.registerCallback(self.synced_callback)
 
@@ -39,10 +39,11 @@ class Receiver(Node):
         msg.thrusters.speed_surge_left = self._current_thruster_surge_left.speed
         msg.header.stamp = self.get_clock().now().to_msg()
         self._publisher_.publish(msg)
-        print("Published new data")
+        self.get_logger().info('I published: "%s"' % msg.twist)
         self._have_new_data = False
 
     def synced_callback(self, thruster_surge_left, odometry):
+        self.get_logger().info('I heard stuff!')
         self._current_thruster_surge_left = thruster_surge_left
         self._current_twist = odometry.twist.twist
         self._have_new_data = True
