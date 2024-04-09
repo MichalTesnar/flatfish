@@ -20,7 +20,7 @@ class Receiver(Node):
         self._thruster_surge_left_subscription = message_filters.Subscriber(self, ThrusterStatus, '/flatfish/thruster_surge_left/thruster_status')
         # @TODO: Add subscription for other thrusters
 
-        self._odometry_subscription = message_filters.Subscriber(self, Odometry, '/flatfish/odometry')
+        self._odometry_subscription = message_filters.Subscriber(self, Odometry, '/flatfish/odom')
 
         self._synchronizer = message_filters.ApproximateTimeSynchronizer([self._thruster_surge_left_subscription, self._odometry_subscription], 10, 0.2, allow_headerless=True)
 
