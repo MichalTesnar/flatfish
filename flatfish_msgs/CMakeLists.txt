@@ -20,6 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ModelWeights.msg"
   "msg/ThrusterStatus.msg"
   "msg/ThrusterSpeeds.msg"
+  "msg/KerasReadyTrainingData.msg"
   LIBRARY_NAME ${PROJECT_NAME}
   DEPENDENCIES std_msgs geometry_msgs
 )

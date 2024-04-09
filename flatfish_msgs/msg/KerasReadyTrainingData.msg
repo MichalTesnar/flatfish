@@ -1,5 +1,4 @@
 # A command to move multiple joints with a timestamp
 std_msgs/Header header
-geometry_msgs/Twist twist
-ThrusterSpeeds thrusters
-float64 uncertainty
+float64[10] sample
+float64[6] target

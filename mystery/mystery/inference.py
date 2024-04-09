@@ -3,8 +3,7 @@ from tensorflow.keras import models
 import rclpy
 from rclpy.node import Node
 from rclpy.time import Time
-from flatfish_msgs.msg import TrainingData
-from flatfish_msgs.msg import ModelWeights
+from flatfish_msgs.msg import TrainingData, ModelWeights, KerasReadyTrainingData
 from shutil import rmtree
 import numpy as np
 
@@ -18,7 +17,9 @@ class InferenceNode(Node):
         super().__init__('receiver')
         self.have_new_data = False
         self.current_training_data = None
-        self.model = AIOModel(training_set=([], []))
+        self.current_sample = None
+        self.current_target = None
+        self.model = AIOModel(training_set=(np.empty((0, 10), float), np.empty((0, 6), float)))
 
         # for numerical derivations
         self.prev_data = []
@@ -36,23 +37,27 @@ class InferenceNode(Node):
             10)
 
         self.publisher_ = self.create_publisher(
-            TrainingData, 'infered_data', 10)
+            KerasReadyTrainingData, 'infered_data', 10)
         timer_period = 1  # seconds
         self.timer = self.create_timer(timer_period, self.publisher_callback)
 
     def publisher_callback(self):
         if not self.have_new_data:
             return
-        msg = self.current_training_data
+        msg = KerasReadyTrainingData()
+        msg.sample = self.current_sample
+        msg.target = self.current_target
         self.publisher_.publish(msg)
 
         self.current_training_data = None
         self.have_new_data = False
+        print("Published new data")
 
     def _get_accelerations(self, data, time_stamp):
         self.prev_data.append((data, time_stamp))
         if len(self.prev_data) <= 5:
             return False, []
+        self.prev_data = self.prev_data[-6:]
         derivatives = np.empty((0, 6), float)
         for i in range(1, 6):
             current_data, current_time = self.prev_data[i]
@@ -90,8 +95,9 @@ class InferenceNode(Node):
 
         if uncertainty > UNCERTAINTY_THRESHOLD:
             # set flag to publish new data
-            self.current_training_data = msg
-            self.current_training_data.uncertainty = uncertainty
+            
+            self.current_sample = sample
+            self.current_target = target
             self.have_new_data = True
 
     def model_weights_callback(self, msg):

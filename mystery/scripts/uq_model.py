@@ -54,6 +54,14 @@ class AIOModel():
         """
 
         new_X, new_y = new_point
+        
+        # If the buffer is not full, just append the new point
+        if self.X_train.shape[0] < self.experiment_specification["BUFFER_SIZE"]:
+            self.X_train = np.concatenate(
+                [self.X_train, new_X.reshape(-1, 1).T])
+            self.y_train = np.concatenate(
+                [self.y_train, new_y.reshape(-1, 1).T])
+            return True
 
         ################## BASELINES ##################
         if self.experiment_specification["MODEL_MODE"] == "FIFO":
