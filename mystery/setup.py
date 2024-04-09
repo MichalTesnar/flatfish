@@ -24,8 +24,9 @@ setup(
                 'thruster_status_publisher = mystery.thruster_status_publisher:main',
                 'receive = mystery.receive:main',
                 'inference = mystery.inference:main',
-                'training = mystery.training:main'
+                'training = mystery.training:main',
+                'test_model = mystery.test_model:main',
         ],
 },
-    scripts=['scripts/model.py'],
+    scripts=['scripts/model.py', 'scripts/uq_model.py'],
 )

@@ -1,103 +1,52 @@
 import numpy as np
-
-from keras.models import Model, Sequential
+from keras.models import Model
 from keras.layers import Input, Dense
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping
-from keras_uncertainty.models import SimpleEnsemble, StochasticRegressor
-from keras_uncertainty.layers import FlipoutDense, StochasticDropout
+from keras_uncertainty.models import SimpleEnsemble
 
+experiment_specification = {
+    "EXPERIMENT_IDENTIFIER": f"Flatfish",
+    "BUFFER_SIZE": 100,
+    "MODEL_MODE": "THRESHOLD",
+    "NUMBER_OF_LAYERS": 2,
+    "UNITS_PER_LAYER": 16,
+    "LEARNING_RATE": 0.001,
+    "BATCH_SIZE": 2,
+    "PATIENCE": 3,
+    "MAX_EPOCHS": 100,
+    "ACCEPT_PROBABILITY": 0.7,
+    "INPUT_LAYER_SIZE": 6 + 4,
+    "OUTPUT_LAYER_SIZE": 6,
+    "UNCERTAINTY_THRESHOLD": 0.02,
+    "NUMBER_OF_ESTIMATORS": 10
+}
 
 class AIOModel():
-    def __init__(self, training_set, experiment_specification, p=0.5) -> None:
-        # assert experiment_specification["MODEL_MODE"] in ["FIFO", "FIRO", "RIRO", "SPACE_HEURISTIC",
-        #                                                  "TIME_HEURISTIC", "GREEDY", "THRESHOLD", "THRESHOLD_GREEDY", "OFFLINE"], "Mode does not exist."
+    def __init__(self, training_set, experiment_specification=experiment_specification, p=0.5) -> None:
         self.experiment_specification = experiment_specification
         self.X_train, self.y_train = training_set
         self.construct_model()
 
     def construct_model(self):
-        if self.experiment_specification["UQ_MODEL"] == "SIMPLE_ENSEMBLE":
-            def model_fn():
-                inp = Input(
-                    shape=(self.experiment_specification["INPUT_LAYER_SIZE"],))
+        def model_fn():
+            inp = Input(
+                shape=(self.experiment_specification["INPUT_LAYER_SIZE"],))
+            x = Dense(
+                self.experiment_specification["UNITS_PER_LAYER"], activation="relu")(inp)
+            for _ in range(self.experiment_specification["NUMBER_OF_LAYERS"] - 1):
                 x = Dense(
-                    self.experiment_specification["UNITS_PER_LAYER"], activation="relu")(inp)
-                for _ in range(self.experiment_specification["NUMBER_OF_LAYERS"] - 1):
-                    x = Dense(
-                        self.experiment_specification["UNITS_PER_LAYER"], activation="relu")(x)
-                mean = Dense(
-                    self.experiment_specification["OUTPUT_LAYER_SIZE"], activation="linear")(x)
-                train_model = Model(inp, mean)
-                print(train_model.summary())
-                train_model.compile(loss="mse", optimizer=Adam(
-                    learning_rate=self.experiment_specification["LEARNING_RATE"]))
-                return train_model
+                    self.experiment_specification["UNITS_PER_LAYER"], activation="relu")(x)
+            mean = Dense(
+                self.experiment_specification["OUTPUT_LAYER_SIZE"], activation="linear")(x)
+            train_model = Model(inp, mean)
+            print(train_model.summary())
+            train_model.compile(loss="mse", optimizer=Adam(
+                learning_rate=self.experiment_specification["LEARNING_RATE"]))
+            return train_model
 
-            self.model = SimpleEnsemble(
-                model_fn, num_estimators=self.experiment_specification["NUMBER_OF_ESTIMATORS"])
-        elif self.experiment_specification["UQ_MODEL"] == "FLIPOUT":
-            num_batches = self.experiment_specification["BUFFER_SIZE"] / \
-                self.experiment_specification["BATCH_SIZE"]
-            kl_weight = 1.0 / num_batches
-            prior_params = {
-                'prior_sigma_1': 5.0,
-                'prior_sigma_2': 2.0,
-                'prior_pi': 0.5
-            }
-
-            # model = Sequential()
-            # model.add(FlipoutDense(self.experiment_specification["UNITS_PER_LAYER"], kl_weight, **prior_params, bias_distribution=True, activation="relu", input_shape=(self.experiment_specification["INPUT_LAYER_SIZE"],)))
-            # for _ in range(self.experiment_specification["NUMBER_OF_LAYERS"] - 1):
-            #     model.add(FlipoutDense(self.experiment_specification["UNITS_PER_LAYER"], kl_weight, **prior_params, bias_distribution=True, activation="relu"))
-            
-            # model.add(FlipoutDense(self.experiment_specification["OUTPUT_LAYER_SIZE"], kl_weight, **prior_params, bias_distribution=True, activation="linear"))
-            # model.compile(loss="mean_squared_error", optimizer="adam")
-            # print(model.summary())
-            # self.model = model
-            model = Sequential()
-            model.add(Dense(self.experiment_specification["UNITS_PER_LAYER"], activation="relu", input_shape=(self.experiment_specification["INPUT_LAYER_SIZE"],)))
-
-            for _ in range(self.experiment_specification["NUMBER_OF_LAYERS"] - 1):
-                model.add(Dense(self.experiment_specification["UNITS_PER_LAYER"], activation="relu"))
-            
-            model.add(FlipoutDense(self.experiment_specification["OUTPUT_LAYER_SIZE"], kl_weight, **prior_params, bias_distribution=True, activation="linear"))
-            model.compile(loss="mean_squared_error", optimizer="adam")
-            print(model.summary())
-            self.model = model
-
-            # inp = Input(shape=(self.experiment_specification["INPUT_LAYER_SIZE"],))
-            # x = Dense(self.experiment_specification["UNITS_PER_LAYER"], activation="relu")(inp)
-
-            # for _ in range(self.experiment_specification["NUMBER_OF_LAYERS"] - 1):
-            #         x = Dense(
-            #             self.experiment_specification["UNITS_PER_LAYER"], activation="relu")(x)
-            # x = FlipoutDense(self.experiment_specification["OUTPUT_LAYER_SIZE"],
-            #           kl_weight, **prior_params, bias_distribution=True, activation="linear")(x)
-            # model = Model(inp, x)
-            # model.compile(loss="mean_squared_error", optimizer="adam")
-            # print(model.summary())
-            # self.model = model
-        
-        elif self.experiment_specification["UQ_MODEL"] == "DROPOUT":
-
-            prob=0.2 
-
-            model = Sequential()
-            model.add(Dense(self.experiment_specification["UNITS_PER_LAYER"], activation="relu", input_shape=(self.experiment_specification["INPUT_LAYER_SIZE"],)))
-            model.add(StochasticDropout(prob))
-
-            for _ in range(self.experiment_specification["NUMBER_OF_LAYERS"] - 1):
-                model.add(StochasticDropout(prob))
-                model.add(Dense(self.experiment_specification["UNITS_PER_LAYER"], activation="relu"))
-            
-            model.add(Dense(self.experiment_specification["OUTPUT_LAYER_SIZE"], activation="linear"))
-            model.compile(loss="mean_squared_error", optimizer="adam")
-            print(model.summary())
-            self.model = model
-
-        else:
-            raise NotImplemented("This UQ model is not implemented.")
+        self.model = SimpleEnsemble(
+            model_fn, num_estimators=self.experiment_specification["NUMBER_OF_ESTIMATORS"])
 
     def update_own_training_set(self, new_point):
         """"
@@ -147,17 +96,6 @@ class AIOModel():
             self.y_train = self.y_train[shuffling_indices]
             return True
 
-        ################## HEURISTICS ##################
-        elif self.experiment_specification["MODEL_MODE"] == "SPACE_HEURISTIC":
-            # @TODO
-            # raise NotImplemented("This method is not implemented.")
-            return True
-
-        elif self.experiment_specification["MODEL_MODE"] == "TIME_HEURISTIC":
-            # @TODO
-            # raise NotImplemented("This method is not implemented.")
-            return True
-
         ################## UQ METHODS ##################
         elif self.experiment_specification["MODEL_MODE"] == "GREEDY":
             # obtain uncertainties on the training set and on the new point
@@ -177,7 +115,6 @@ class AIOModel():
             # obtain uncertainty on the new point
             _, new_point_std = self.predict(new_X.reshape(1, -1))
             # if the uncertainty is too low, just directly reject the point, it is not interesting enough
-            print(np.mean(new_point_std))
             if np.mean(new_point_std) < self.experiment_specification["UNCERTAINTY_THRESHOLD"]:
                 return False
             # otherwise replace a random old point with it
@@ -215,34 +152,18 @@ class AIOModel():
         """
         Retrain yourself give the own dataset you have.
         """
-        if self.experiment_specification["UQ_MODEL"] == "SIMPLE_ENSEMBLE":
-            early_stop = EarlyStopping(
-                monitor='loss', patience=self.experiment_specification["PATIENCE"])
-            history = self.model.fit(self.X_train, self.y_train, verbose=verbose, epochs=self.experiment_specification["MAX_EPOCHS"], callbacks=[
-                early_stop], batch_size=self.experiment_specification["BATCH_SIZE"])
-            return history
-        elif self.experiment_specification["UQ_MODEL"] == "FLIPOUT" or self.experiment_specification["UQ_MODEL"] == "DROPOUT":
-            early_stop = EarlyStopping(
-                monitor='loss', patience=self.experiment_specification["PATIENCE"])
-            history = self.model.fit(self.X_train, self.y_train, verbose=verbose, epochs=self.experiment_specification["MAX_EPOCHS"], callbacks=[
-                early_stop], batch_size=self.experiment_specification["BATCH_SIZE"])
-            return history
-        raise NotImplemented("This UQ model is not implemented.")
+        early_stop = EarlyStopping(
+            monitor='loss', patience=self.experiment_specification["PATIENCE"])
+        history = self.model.fit(self.X_train, self.y_train, verbose=verbose, epochs=self.experiment_specification["MAX_EPOCHS"], callbacks=[
+            early_stop], batch_size=self.experiment_specification["BATCH_SIZE"])
+        return history
 
     def predict(self, points):
         """
         Predict on the given set of points, also output uncertainty.
         """
-        
-        if self.experiment_specification["UQ_MODEL"] == "SIMPLE_ENSEMBLE":
-            pred_mean, pred_std = self.model(points)
-            return pred_mean, pred_std
-        elif self.experiment_specification["UQ_MODEL"] == "FLIPOUT" or self.experiment_specification["UQ_MODEL"] == "DROPOUT":
-            st_model = StochasticRegressor(self.model)
-            pred_mean, pred_std = st_model.predict(points, num_samples=10)
-            return pred_mean, pred_std
-        else:
-            raise NotImplemented("This UQ model is not implemented.")
+        pred_mean, pred_std = self.model(points)
+        return pred_mean, pred_std
 
 
 class AIOModelTuning(AIOModel):

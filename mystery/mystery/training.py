@@ -4,8 +4,8 @@ import json
 import numpy as np
 
 from model import SimpleRegressionModel
+from uq_model import AIOModel
 
-from geometry_msgs.msg import TwistStamped
 from flatfish_msgs.msg import ModelWeights
 from flatfish_msgs.msg import TrainingData
 
