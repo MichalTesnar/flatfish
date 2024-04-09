@@ -4,16 +4,13 @@ import rclpy
 from rclpy.node import Node
 from flatfish_msgs.msg import TrainingData
 from flatfish_msgs.msg import ModelWeights
-import json
-
 
 class InferenceNode(Node):
     def __init__(self):
         super().__init__('receiver')
         self.have_new_data = False
-        self.current_twist = None
-        self.current_thruster_status = None
         self.uncertainty = None
+        self.current_training_data = None
         self.model = SimpleRegressionModel(6)
 
         self.model_weights_subscription = self.create_subscription(
@@ -29,21 +26,17 @@ class InferenceNode(Node):
             10)
 
         self.publisher_ = self.create_publisher(TrainingData, 'infered_data', 10)
-        timer_period = 2  # seconds
+        timer_period = 1  # seconds
         self.timer = self.create_timer(timer_period, self.publisher_callback)
 
     def publisher_callback(self):
         if not self.have_new_data:
             return
-        msg = TrainingData()
-        msg.twist = self.current_twist
-        msg.thruster = self.current_thruster_status
-        msg.uncertainty = self.uncertainty
+        msg = self.current_training_data
         
         self.publisher_.publish(msg)
-        self.current_twist = None
-        self.current_thruster_status = None
-        self.uncertainty = None
+        
+        self.current_training_data = None
         self.have_new_data = False
 
     def incoming_data_callback(self, msg):

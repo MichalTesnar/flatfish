@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-                'twist_publisher = mystery.twist_publisher:main',
+                'odometry_publisher = mystery.odometry_publisher:main',
                 'thruster_status_publisher = mystery.thruster_status_publisher:main',
                 'receive = mystery.receive:main',
                 'inference = mystery.inference:main',

@@ -1,23 +1,20 @@
 import rclpy
 from rclpy.node import Node
 import random
-from flatfish_msgs.msg import JointCommandStamped
+from flatfish_msgs.msg import ThrusterStatus
 
 class ThrusterStatusPublisher(Node):
 
     def __init__(self):
         super().__init__('thruster_status_publisher')
-        self.publisher_ = self.create_publisher(JointCommandStamped, 'thurster_status', 10)
+        self.publisher_ = self.create_publisher(ThrusterStatus, '/flatfish/thruster_surge_left/thruster_status', 10)
         timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
     def timer_callback(self):
-        msg = JointCommandStamped()
-        msg.positions = [random.uniform(-1, 1) for _ in range(6)]
-        msg.velocities = [random.uniform(-1, 1) for _ in range(6)]
-        msg.accelerations = [random.uniform(-1, 1) for _ in range(6)]
-        msg.effort = [random.uniform(-1, 1) for _ in range(6)]
+        msg = ThrusterStatus()
+        msg.speed = random.uniform(-1, 1)
         
         self.publisher_.publish(msg)
         self.get_logger().info(f'Publishing: {self.i}')
