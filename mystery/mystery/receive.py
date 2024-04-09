@@ -37,6 +37,7 @@ class Receiver(Node):
         msg = TrainingData()
         msg.twist = self._current_twist
         msg.thrusters.speed_surge_left = self._current_thruster_surge_left.speed
+        msg.header.stamp = self.get_clock().now().to_msg()
         self._publisher_.publish(msg)
 
         self._have_new_data = False

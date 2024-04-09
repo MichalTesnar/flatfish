@@ -16,7 +16,7 @@ experiment_specification = {
     "PATIENCE": 3,
     "MAX_EPOCHS": 100,
     "ACCEPT_PROBABILITY": 0.7,
-    "INPUT_LAYER_SIZE": 6 + 4,
+    "INPUT_LAYER_SIZE": 10,
     "OUTPUT_LAYER_SIZE": 6,
     "UNCERTAINTY_THRESHOLD": 0.02,
     "NUMBER_OF_ESTIMATORS": 10
