@@ -9,7 +9,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 
-CONVERSION_CONSTANT = 1e-9
+CONVERSION_CONSTANT = 1e9
 
 class InferenceNode(Node):
     def __init__(self):
@@ -38,7 +38,7 @@ class InferenceNode(Node):
 
         self.publisher_ = self.create_publisher(
             KerasReadyTrainingData, 'infered_data', 10)
-        timer_period = 1  # seconds
+        timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.publisher_callback)
 
     def publisher_callback(self):
@@ -63,7 +63,7 @@ class InferenceNode(Node):
         for i in range(1, 6):
             current_data, current_time = self.prev_data[i]
             previous_data, previous_time = self.prev_data[i-1]
-            derivative = (current_data - previous_data)/((current_time - previous_time))
+            derivative = (current_data - previous_data)/((current_time - previous_time)/CONVERSION_CONSTANT)
             # this is nanoseconds, should it be converted?
             derivatives = np.vstack((derivatives, derivative))
         return True, np.mean(derivatives, axis=0)
@@ -98,10 +98,11 @@ class InferenceNode(Node):
         # assemble sample
         sample = np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z,
                   thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear])
-        self.get_logger().info(str(sample))
+        # self.get_logger().info(str(sample))
         # get accelerations
         valid_data_flag, target = self._get_accelerations(
             np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp)
+        # self.get_logger().info(str(target))
         # return if not enough data
         if not valid_data_flag:
             return

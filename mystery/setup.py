@@ -25,7 +25,7 @@ setup(
                 'receive = mystery.receive:main',
                 'inference = mystery.inference:main',
                 'training = mystery.training:main',
-                'test_model = mystery.test_model:main',
+                'plotting = mystery.plotting:main',
         ],
 },
     scripts=['scripts/model.py', 'scripts/uq_model.py'],

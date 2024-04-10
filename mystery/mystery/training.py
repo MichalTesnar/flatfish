@@ -3,6 +3,8 @@ from rclpy.node import Node
 import numpy as np
 import uuid
 
+import time
+
 from uq_model import AIOModel
 
 from flatfish_msgs.msg import ModelWeights, KerasReadyTrainingData
@@ -39,7 +41,11 @@ class TrainingNode(Node):
         sample, target = np.array(msg.sample), np.array(msg.target)
         training_flag = self.aio_model.update_own_training_set((sample, target), msg.uncertainty)
         if training_flag:
+            # measure time on retraining
+            start_time = time.time()
             history = self.aio_model.retrain()
+            end_time = time.time()
+            self.get_logger().info(f"Training took {end_time - start_time} seconds.")
             self.get_logger().info(f"Model has been retrained.")
             self.have_new_data = True
 
