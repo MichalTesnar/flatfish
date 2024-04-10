@@ -5,8 +5,8 @@ from rclpy.time import Time
 from flatfish_msgs.msg import TrainingData
 from nav_msgs.msg import Odometry
 
-from flatfish_msgs.msg import ThrusterStatus # use if working locally
-# from thruster_enitech.msg import ThrusterStatus # use if working running on flatfish
+# from flatfish_msgs.msg import ThrusterStatus # use if working locally
+from thruster_enitech.msg import ThrusterStatus # use if working running on flatfish
 
 import message_filters
 
