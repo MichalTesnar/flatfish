@@ -6,6 +6,7 @@ from rclpy.time import Time
 from flatfish_msgs.msg import TrainingData, ModelWeights, KerasReadyTrainingData
 from shutil import rmtree
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 
 CONVERSION_CONSTANT = 1e-9
@@ -62,22 +63,34 @@ class InferenceNode(Node):
         for i in range(1, 6):
             current_data, current_time = self.prev_data[i]
             previous_data, previous_time = self.prev_data[i-1]
-            derivative = (current_data - previous_data)/((current_time - previous_time)/CONVERSION_CONSTANT)
+            derivative = (current_data - previous_data)/((current_time - previous_time))
+            # this is nanoseconds, should it be converted?
             derivatives = np.vstack((derivatives, derivative))
         return True, np.mean(derivatives, axis=0)
-        
+    
+    def _transform_to_body_frame(self, msg):
+        quaternion = [msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w]
+        rotation = R.from_quat(quaternion)
+        inverse_rotation = rotation.inv()
+        linear_velocity = np.array([msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z])
+        angular_velocity = np.array([msg.twist.angular.x, msg.twist.angular.y, msg.twist.angular.z])
+        linear_velocity_body = inverse_rotation.apply(linear_velocity)
+        angular_velocity_body = inverse_rotation.apply(angular_velocity)
+        return linear_velocity_body, angular_velocity_body
+
 
     def incoming_data_callback(self, msg):
         # get data
         time_stamp = Time.from_msg(msg.header.stamp).nanoseconds
-
-        linear_x = msg.twist.linear.x
-        linear_y = msg.twist.linear.y
-        linear_z = msg.twist.linear.z
-        angular_x = msg.twist.angular.x
-        angular_y = msg.twist.angular.y
-        angular_z = msg.twist.angular.z
-        
+        linear_velocity_body, angular_velocity_body = self._transform_to_body_frame(msg)
+        # get transformed velocities
+        linear_x = linear_velocity_body[0]
+        linear_y = linear_velocity_body[1]
+        linear_z = linear_velocity_body[2]
+        angular_x = angular_velocity_body[0]
+        angular_y = angular_velocity_body[1]
+        angular_z = angular_velocity_body[2]
+        # get thruster data
         thruster_surge_left = msg.thrusters.speed_surge_left
         thruster_surge_right = msg.thrusters.speed_surge_right
         thruster_sway_front = msg.thrusters.speed_sway_front
@@ -85,6 +98,7 @@ class InferenceNode(Node):
         # assemble sample
         sample = np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z,
                   thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear])
+        self.get_logger().info(str(sample))
         # get accelerations
         valid_data_flag, target = self._get_accelerations(
             np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp)

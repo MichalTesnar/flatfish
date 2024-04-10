@@ -16,6 +16,7 @@ class Receiver(Node):
         super().__init__('receiver')
         self._have_new_data = False
         self._current_twist = None
+        self._current_pose = None
         self._current_thruster_surge_left = None
         self._current_thruster_surge_right = None
         self._current_thruster_sway_front = None
@@ -53,6 +54,7 @@ class Receiver(Node):
             return
         msg = TrainingData()
         msg.twist = self._current_twist
+        msg.pose = self._current_pose
         msg.thrusters.speed_surge_left = self._current_thruster_surge_left.speed
         msg.thrusters.speed_surge_right = self._current_thruster_surge_right.speed
         msg.thrusters.speed_sway_front = self._current_thruster_sway_front.speed
@@ -68,6 +70,7 @@ class Receiver(Node):
         self._current_thruster_sway_front = thruster_sway_front
         self._current_thruster_sway_rear = thruster_sway_rear
         self._current_twist = odometry.twist.twist
+        self._current_pose = odometry.pose.pose
         self._have_new_data = True
 
 
