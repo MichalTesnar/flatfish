@@ -28,19 +28,19 @@ class TrainingNode(Node):
         if not self.have_new_data:
             return
         id_of_weights = str(uuid.uuid4())
-        self.aio_model.model.save_weights(id_of_weights)
+        directory_of_weights = "model_weights/" + id_of_weights
+        self.aio_model.model.save_weights(directory_of_weights, verbose=False)
         msg = ModelWeights()
-        msg.path = id_of_weights
+        msg.path = directory_of_weights
         self.publisher_.publish(msg)
-        print("Now I have published path to the new weights.")
+        self.get_logger().info(f'Published new weights')
 
     def incoming_data_callback(self, msg):
         sample, target = np.array(msg.sample), np.array(msg.target)
-        print(target)
-        training_flag = self.aio_model.update_own_training_set((sample, target))
+        training_flag = self.aio_model.update_own_training_set((sample, target), msg.uncertainty)
         if training_flag:
             history = self.aio_model.retrain()
-            print("Model has been retrained.")
+            self.get_logger().info(f"Model has been retrained.")
             self.have_new_data = True
 
 

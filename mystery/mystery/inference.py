@@ -10,8 +10,6 @@ import numpy as np
 
 CONVERSION_CONSTANT = 1e-9
 
-UNCERTAINTY_THRESHOLD = 0.001
-
 class InferenceNode(Node):
     def __init__(self):
         super().__init__('receiver')
@@ -19,6 +17,7 @@ class InferenceNode(Node):
         self.current_training_data = None
         self.current_sample = None
         self.current_target = None
+        self.uncertainty = None
         self.model = AIOModel(training_set=(np.empty((0, 10), float), np.empty((0, 6), float)))
 
         # for numerical derivations
@@ -47,11 +46,12 @@ class InferenceNode(Node):
         msg = KerasReadyTrainingData()
         msg.sample = self.current_sample
         msg.target = self.current_target
+        msg.uncertainty = self.uncertainty
         self.publisher_.publish(msg)
 
         self.current_training_data = None
         self.have_new_data = False
-        print("Published new data")
+        self.get_logger().info(f'Published new data')
 
     def _get_accelerations(self, data, time_stamp):
         self.prev_data.append((data, time_stamp))
@@ -64,11 +64,11 @@ class InferenceNode(Node):
             previous_data, previous_time = self.prev_data[i-1]
             derivative = (current_data - previous_data)/((current_time - previous_time)/CONVERSION_CONSTANT)
             derivatives = np.vstack((derivatives, derivative))
-        return True, np.median(derivatives, axis=0)
+        return True, np.mean(derivatives, axis=0)
         
 
     def incoming_data_callback(self, msg):
-        # A command to move multiple joints with a timestamp
+        # get data
         time_stamp = Time.from_msg(msg.header.stamp).nanoseconds
 
         linear_x = msg.twist.linear.x
@@ -77,34 +77,32 @@ class InferenceNode(Node):
         angular_x = msg.twist.angular.x
         angular_y = msg.twist.angular.y
         angular_z = msg.twist.angular.z
+        
         thruster_surge_left = msg.thrusters.speed_surge_left
         thruster_surge_right = msg.thrusters.speed_surge_right
         thruster_sway_front = msg.thrusters.speed_sway_front
         thruster_sway_rear = msg.thrusters.speed_sway_rear
-
+        # assemble sample
         sample = np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z,
                   thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear])
-        flag, target = self._get_accelerations(
+        # get accelerations
+        valid_data_flag, target = self._get_accelerations(
             np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp)
-        
-        if not flag:
+        # return if not enough data
+        if not valid_data_flag:
             return
-        
+        # assess uncertainty
         pred_mean, pred_std = self.model.predict(sample.reshape(1, -1))
-        uncertainty = float(np.mean(pred_std))
-
-        if uncertainty > UNCERTAINTY_THRESHOLD:
-            # set flag to publish new data
-            
-            self.current_sample = sample
-            self.current_target = target
-            self.have_new_data = True
+        self.uncertainty = float(np.mean(pred_std))
+        self.current_sample = sample
+        self.current_target = target
+        self.have_new_data = True
 
     def model_weights_callback(self, msg):
         model_path = msg.path
         self.model.model.load_weights(model_path)
         rmtree(model_path)
-        print("Model weights updated")
+        self.get_logger().info(f'Model weights updated')
 
 
 def main(args=None):

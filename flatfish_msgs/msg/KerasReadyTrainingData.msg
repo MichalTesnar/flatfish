@@ -2,3 +2,4 @@
 std_msgs/Header header
 float64[10] sample
 float64[6] target
+float64 uncertainty

@@ -48,13 +48,13 @@ class AIOModel():
         self.model = SimpleEnsemble(
             model_fn, num_estimators=self.experiment_specification["NUMBER_OF_ESTIMATORS"])
 
-    def update_own_training_set(self, new_point):
+    def update_own_training_set(self, new_point, uncertainty):
         """"
         Update the training set with the new incoming points. Return false, as long as you did not update, then you keep being fed a new item.
         """
 
         new_X, new_y = new_point
-        
+
         # If the buffer is not full, just append the new point
         if self.X_train.shape[0] < self.experiment_specification["BUFFER_SIZE"]:
             self.X_train = np.concatenate(
@@ -90,7 +90,6 @@ class AIOModel():
         elif self.experiment_specification["MODEL_MODE"] == "RIRO":
             # Only accept with probability 'p'
             a = np.random.rand()
-            print(a)
             if a > self.experiment_specification["ACCEPT_PROBABILITY"]:
                 return False
             # Replace random point
@@ -108,7 +107,7 @@ class AIOModel():
         elif self.experiment_specification["MODEL_MODE"] == "GREEDY":
             # obtain uncertainties on the training set and on the new point
             _, train_set_stds = self.predict(self.X_train)
-            _, new_point_std = self.predict(new_X.reshape(1, -1))
+            new_point_std = uncertainty
             # reject if the uncertainty of the incoming point is lower than the minimum uncertainty in your training set
             train_set_stds_means = np.mean(train_set_stds, axis=1)
             if np.min(train_set_stds_means) > np.mean(new_point_std):
@@ -121,7 +120,7 @@ class AIOModel():
 
         elif self.experiment_specification["MODEL_MODE"] == "THRESHOLD":
             # obtain uncertainty on the new point
-            _, new_point_std = self.predict(new_X.reshape(1, -1))
+            new_point_std = uncertainty
             # if the uncertainty is too low, just directly reject the point, it is not interesting enough
             if np.mean(new_point_std) < self.experiment_specification["UNCERTAINTY_THRESHOLD"]:
                 return False
@@ -138,7 +137,7 @@ class AIOModel():
 
         elif self.experiment_specification["MODEL_MODE"] == "THRESHOLD_GREEDY":
             # obtain uncertainty on the new point
-            _, new_point_std = self.predict(new_X.reshape(1, -1))
+            new_point_std = uncertainty
             # if the uncertainty is too low, just directly reject the point
             if np.mean(new_point_std) < self.experiment_specification["UNCERTAINTY_THRESHOLD"]:
                 return False
