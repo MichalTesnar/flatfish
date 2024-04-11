@@ -28,5 +28,5 @@ setup(
                 'plotting = mystery.plotting:main',
         ],
 },
-    scripts=['scripts/model.py', 'scripts/uq_model.py'],
+    scripts=['scripts/uq_model.py'],
 )

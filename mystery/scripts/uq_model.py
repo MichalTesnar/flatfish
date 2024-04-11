@@ -7,25 +7,27 @@ from keras_uncertainty.models import SimpleEnsemble
 
 experiment_specification = {
     "EXPERIMENT_IDENTIFIER": f"Flatfish",
-    "BUFFER_SIZE": 500,
+    "BUFFER_SIZE": 200,
     "MODEL_MODE": "THRESHOLD",
-    "NUMBER_OF_LAYERS": 2,
+    "NUMBER_OF_LAYERS": 1,
     "UNITS_PER_LAYER": 16,
-    "LEARNING_RATE": 0.001,
-    "BATCH_SIZE": 2,
-    "PATIENCE": 3,
-    "MAX_EPOCHS": 100,
+    "LEARNING_RATE": 10e-3,
+    "BATCH_SIZE": 4,
+    "PATIENCE": 5,
+    "MAX_EPOCHS": 50,
     "ACCEPT_PROBABILITY": 0.7,
     "INPUT_LAYER_SIZE": 10,
     "OUTPUT_LAYER_SIZE": 6,
     "UNCERTAINTY_THRESHOLD": 0.02,
-    "NUMBER_OF_ESTIMATORS": 10
+    "NUMBER_OF_ESTIMATORS": 10,
+    "TRAINING_BUFFERING": 10
 }
 
 class AIOModel():
     def __init__(self, training_set, experiment_specification=experiment_specification, p=0.5) -> None:
         self.experiment_specification = experiment_specification
         self.X_train, self.y_train = training_set
+        self.buffering_counter = 0
         self.construct_model()
 
     def construct_model(self):
@@ -56,10 +58,12 @@ class AIOModel():
         new_X, new_y = new_point
 
         # If the buffer is not full, just append the new point
-        print("Filling in the buffer ", self.X_train.shape[0], self.experiment_specification["BUFFER_SIZE"])
-        print("Uncertainty: ", uncertainty)
+        # print("Filling in ", self.X_train.shape[0], self.experiment_specification["BUFFER_SIZE"])
+        print(f"Current Uncertainty: {uncertainty}, Skipping? : {uncertainty > self.experiment_specification['UNCERTAINTY_THRESHOLD']} Buffering: {self.buffering_counter}")
+
 
         if self.X_train.shape[0] < self.experiment_specification["BUFFER_SIZE"]:
+            self.buffering_counter += 1
             self.X_train = np.concatenate(
                 [self.X_train, new_X.reshape(-1, 1).T])
             self.y_train = np.concatenate(
@@ -68,6 +72,7 @@ class AIOModel():
 
         ################## BASELINES ##################
         if self.experiment_specification["MODEL_MODE"] == "FIFO":
+            self.buffering_counter += 1
             self.X_train = self.X_train[1:]
             self.y_train = self.y_train[1:]
             self.X_train = np.concatenate(
@@ -78,6 +83,7 @@ class AIOModel():
 
         # First in, random out
         elif self.experiment_specification["MODEL_MODE"] == "FIRO":
+            self.buffering_counter += 1
             # Replace random point in the dataset
             random_index = np.random.choice(self.X_train.shape[0])
             self.X_train[random_index] = new_X
@@ -95,6 +101,7 @@ class AIOModel():
             a = np.random.rand()
             if a > self.experiment_specification["ACCEPT_PROBABILITY"]:
                 return False
+            self.buffering_counter += 1
             # Replace random point
             random_index = np.random.choice(self.X_train.shape[0])
             self.X_train[random_index] = new_X
@@ -115,6 +122,7 @@ class AIOModel():
             train_set_stds_means = np.mean(train_set_stds, axis=1)
             if np.min(train_set_stds_means) > np.mean(new_point_std):
                 return False
+            self.buffering_counter += 1
             # otherwise replace the most certain point with the new point
             idx = np.argmin(train_set_stds_means)
             self.X_train[idx] = new_X
@@ -127,6 +135,7 @@ class AIOModel():
             # if the uncertainty is too low, just directly reject the point, it is not interesting enough
             if np.mean(new_point_std) < self.experiment_specification["UNCERTAINTY_THRESHOLD"]:
                 return False
+            self.buffering_counter += 1
             # otherwise replace a random old point with it
             random_index = np.random.choice(self.X_train.shape[0])
             self.X_train[random_index] = new_X
@@ -144,6 +153,7 @@ class AIOModel():
             # if the uncertainty is too low, just directly reject the point
             if np.mean(new_point_std) < self.experiment_specification["UNCERTAINTY_THRESHOLD"]:
                 return False
+            self.buffering_counter += 1
             # obtain uncertainties on the training set
             _, train_set_stds = self.predict(self.X_train)
             # reject if the uncertainty of the incoming point is lower than the minimum uncertainty in your training set
@@ -162,6 +172,9 @@ class AIOModel():
         """
         Retrain yourself give the own dataset you have.
         """
+        if self.buffering_counter < self.experiment_specification["TRAINING_BUFFERING"]:
+            return
+        self.buffering_counter = 0
         early_stop = EarlyStopping(
             monitor='loss', patience=self.experiment_specification["PATIENCE"])
         history = self.model.fit(self.X_train, self.y_train, verbose=verbose, epochs=self.experiment_specification["MAX_EPOCHS"], callbacks=[

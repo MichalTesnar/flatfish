@@ -52,7 +52,7 @@ class InferenceNode(Node):
 
         self.current_training_data = None
         self.have_new_data = False
-        # self.get_logger().info(f'Published new data')
+        self.get_logger().info(f'Published new data')
 
     def _get_accelerations(self, data, time_stamp):
         self.prev_data.append((data, time_stamp))
@@ -63,14 +63,14 @@ class InferenceNode(Node):
         for i in range(1, 6):
             current_data, current_time = self.prev_data[i]
             previous_data, previous_time = self.prev_data[i-1]
-            derivative = (current_data - previous_data)/((current_time - previous_time)/CONVERSION_CONSTANT)
-            # this is nanoseconds, should it be converted?
+            derivative = (current_data - previous_data)/(current_time - previous_time)
             derivatives = np.vstack((derivatives, derivative))
         return True, np.mean(derivatives, axis=0)
     
     def incoming_data_callback(self, msg):
         # get data
-        time_stamp = Time.from_msg(msg.header.stamp).nanoseconds
+        time_stamp_secs = Time.from_msg(msg.header.stamp).nanoseconds/CONVERSION_CONSTANT
+
         # get transformed velocities
         linear_x = msg.twist.linear.x
         linear_y = msg.twist.linear.y
@@ -86,11 +86,9 @@ class InferenceNode(Node):
         # assemble sample
         sample = np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z,
                   thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear])
-        self.get_logger().info(str(sample[0:3]))
         # get accelerations
         valid_data_flag, target = self._get_accelerations(
-            np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp)
-        # self.get_logger().info(str(target))
+            np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp_secs)
         # return if not enough data
         if not valid_data_flag:
             return
