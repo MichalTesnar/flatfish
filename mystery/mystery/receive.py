@@ -44,7 +44,7 @@ class Receiver(Node):
              self._thruster_sway_front_subscription,
              self._thruster_sway_rear_subscription,
              self._odometry_subscription],
-            10, ALLOWED_TIME_DIFFERENCE, allow_headerless=False)
+            10, ALLOWED_TIME_DIFFERENCE, allow_headerless=True)
 
         self._synchronizer.registerCallback(self.synced_callback)
 
@@ -72,6 +72,7 @@ class Receiver(Node):
         """ Checks that the incoming data does not contain NaN values
             in the twist part of the message. This can happen due to 
             proximity of DVL sensor to the wall. """
+        self.get_logger().info('I am getting invalid data!')
         if isnan(data.linear.x) or isnan(data.linear.y) or isnan(data.linear.z):
             return False
         return True
