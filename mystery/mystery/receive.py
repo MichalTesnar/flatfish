@@ -11,7 +11,7 @@ from nav_msgs.msg import Odometry
 from thruster_enitech.msg import ThrusterStatus
 
 
-ALLOWED_TIME_DIFFERENCE = 0.1
+ALLOWED_TIME_DIFFERENCE = 0.2
 PUBLISHER_PERIOD = 0.1
 
 
