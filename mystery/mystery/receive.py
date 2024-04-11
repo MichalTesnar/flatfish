@@ -73,6 +73,9 @@ class Receiver(Node):
             in the twist part of the message. This can happen due to 
             proximity of DVL sensor to the wall. """
         self.get_logger().info('I am getting invalid data!')
+        self.get_logger().info(data.linear.x)
+        self.get_logger().info(data.linear.y)
+        self.get_logger().info(data.linear.z)
         if isnan(data.linear.x) or isnan(data.linear.y) or isnan(data.linear.z):
             return False
         return True
