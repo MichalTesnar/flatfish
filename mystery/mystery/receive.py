@@ -81,7 +81,7 @@ class Receiver(Node):
         return True
 
     def synced_callback(self, thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear,  odometry):
-        if self.check_data_validity(odometry.twist.twist):
+        if not self.check_data_validity(odometry.twist.twist):
             return
 
         self._current_twist = odometry.twist.twist
