@@ -1,14 +1,18 @@
 import rclpy
 from rclpy.node import Node
-from rclpy.time import Time
+import message_filters
+from math import isnan
 
 from flatfish_msgs.msg import TrainingData
 from nav_msgs.msg import Odometry
 
 # from flatfish_msgs.msg import ThrusterStatus # use if working locally
-from thruster_enitech.msg import ThrusterStatus # use if working running on flatfish
+# use if working running on flatfish
+from thruster_enitech.msg import ThrusterStatus
 
-import message_filters
+
+ALLOWED_TIME_DIFFERENCE = 0.1
+PUBLISHER_PERIOD = 0.1
 
 
 class Receiver(Node):
@@ -32,7 +36,7 @@ class Receiver(Node):
             self, ThrusterStatus, '/flatfish/thruster_sway_rear/thruster_status')
 
         self._odometry_subscription = message_filters.Subscriber(
-            self, Odometry, '/flatfish/odom')
+            self, Odometry, '/flatfish/odom_simple/odom')
 
         self._synchronizer = message_filters.ApproximateTimeSynchronizer(
             [self._thruster_surge_left_subscription,
@@ -40,13 +44,13 @@ class Receiver(Node):
              self._thruster_sway_front_subscription,
              self._thruster_sway_rear_subscription,
              self._odometry_subscription],
-            10, 0.2, allow_headerless=False)
+            10, ALLOWED_TIME_DIFFERENCE, allow_headerless=False)
 
         self._synchronizer.registerCallback(self.synced_callback)
 
         self._publisher_ = self.create_publisher(
             TrainingData, 'gathered_data', 10)
-        timer_period = 0.1  # seconds
+        timer_period = PUBLISHER_PERIOD  # seconds
         self.timer = self.create_timer(timer_period, self.publisher_callback)
 
     def publisher_callback(self):
@@ -64,13 +68,24 @@ class Receiver(Node):
         self._have_new_data = False
         self.get_logger().info('I published!')
 
+    def check_data_validity(self, data):
+        """ Checks that the incoming data does not contain NaN values
+            in the twist part of the message. This can happen due to 
+            proximity of DVL sensor to the wall. """
+        if isnan(data.linear.x) or isnan(data.linear.y) or isnan(data.linear.z):
+            return False
+        return True
+
     def synced_callback(self, thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear,  odometry):
+        if self.check_data_validity(odometry.twist.twist):
+            return
+
+        self._current_twist = odometry.twist.twist
+        self._current_pose = odometry.pose.pose
         self._current_thruster_surge_left = thruster_surge_left
         self._current_thruster_surge_right = thruster_surge_right
         self._current_thruster_sway_front = thruster_sway_front
         self._current_thruster_sway_rear = thruster_sway_rear
-        self._current_twist = odometry.twist.twist
-        self._current_pose = odometry.pose.pose
         self._have_new_data = True
 
 

@@ -21,7 +21,7 @@ class MinimalSubscriber(Node):
 
     def listener_callback(self, msg):
         global counter
-        plt.plot(counter, msg.uncertainty, '*')
+        plt.plot(counter, msg.sample[0], "*")
         plt.axis("equal")
         plt.draw()
         plt.pause(0.00000000001)
