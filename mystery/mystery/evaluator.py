@@ -16,7 +16,7 @@ class EvaluatorNode(Node):
         self.have_new_data = False
         self.model = AIOModel()
         # open csv file called data.csv
-        self.data = pd.read_csv('src/rosbags/data.csv')
+        self.data = pd.read_csv('src/rosbags/data.csv', nrows=1000)
         # read first 10 columns as sample, then 6 as target
         self.test_sample = self.data.iloc[:, :7].values
         self.test_target = self.data.iloc[:, 7:].values
@@ -42,16 +42,17 @@ class EvaluatorNode(Node):
         print(MSE)
         msg = EvaluationMetrics()
         msg.mse = MSE
+        msg.header.stamp = self.get_clock().now().to_msg()
         self.publisher_.publish(msg)
 
         self.have_new_data = False
-        self.get_logger().info(f'Published new data')
+        #self.get_logger().info(f'Published new data')
 
     def model_weights_callback(self, msg):
         model_path = msg.path
         self.model.model.load_weights(model_path)
         rmtree(model_path)
-        self.get_logger().info(f'Model weights updated')
+        #self.get_logger().info(f'Model weights updated')
         self.have_new_data = True
 
 

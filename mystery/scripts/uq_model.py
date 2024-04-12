@@ -66,7 +66,7 @@ class AIOModel():
 
 
         if self.X_train.shape[0] < self.experiment_specification["BUFFER_SIZE"]:
-            self.buffering_counter += 1
+            #self.buffering_counter += 1
             self.X_train = np.concatenate(
                 [self.X_train, new_X.reshape(-1, 1).T])
             self.y_train = np.concatenate(

@@ -2,7 +2,7 @@ import rosbag_api as bag
 from rosidl_runtime_py.utilities import get_message
 from rclpy.serialization import deserialize_message
 
-bag_file = 'rosbag2_short_infered_data/rosbag2_short_infered_data.db3'
+bag_file = 'rosbag2_short_1_infered/rosbag2_short_1_infered.db3'
 topic_name = '/infered_data'
 
 ### connect to the database

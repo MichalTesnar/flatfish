@@ -100,10 +100,12 @@ class InferenceNode(Node):
         angular_y = msg.twist.angular.y
         angular_z = msg.twist.angular.z
         # get thruster data
-        thruster_surge_left = msg.thrusters.speed_surge_left
-        thruster_surge_right = msg.thrusters.speed_surge_right
-        thruster_sway_front = msg.thrusters.speed_sway_front
-        thruster_sway_rear = msg.thrusters.speed_sway_rear
+        NORMALIZE_THRUSTERS = 65
+
+        thruster_surge_left = msg.thrusters.speed_surge_left/NORMALIZE_THRUSTERS
+        thruster_surge_right = msg.thrusters.speed_surge_right/NORMALIZE_THRUSTERS
+        thruster_sway_front = msg.thrusters.speed_sway_front/NORMALIZE_THRUSTERS
+        thruster_sway_rear = msg.thrusters.speed_sway_rear/NORMALIZE_THRUSTERS
         # assemble sample
         sample = np.array([linear_x, linear_y, angular_z, thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear])
         #sample = np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z,
