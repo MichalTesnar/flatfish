@@ -11,8 +11,11 @@ Installing dependencies
 
 # To sync subscription to
 ```/flatfish/thruster_surge_left/thruster_status```
+
 ```/flatfish/thruster_surge_right/thruster_status```
+
 ```/flatfish/thruster_sway_front/thruster_status```
+
 ```/flatfish/thruster_sway_rear/thruster_status```
 all of type 
 [flatfish_msgs/msg/ThrusterStatus](https://git.hb.dfki.de/flatfish/drivers/ros2_thruster_enitech/-/blob/master/msg/ThrusterStatus.msg?ref_type=heads)
@@ -52,5 +55,26 @@ source /opt/ros/foxy/setup.bash
 export ROS_DOMAIN_ID=10
 ros2 launch ros2_remote_relay launch_remote_relay_joy.py
 
+# depth control
+First launch stuff thrusters in a decoupled mode.
 
+```ros2 launch flatfish_launch launch_thrusters_decoupled.launch.py ```
+
+```ros2 launch flatfish_launch launch_thruster_allocation_decoupled.launch.py ```
+
+Then make sure that on flatfish make sure the odom_simple is running
+
+To launch the pose control on flatfish
+ros2 launch flatfish_launch launch_pose_control_depth.launch.py
+
+DO NOT FORGET TO
+
+```export ROS_DOMAIN_ID=10 && source ros2_humble/install/setup.bash```
+on your laptop:
+```ros2 topic pub -r 5 /cmd_pose geometry_msgs/msg/PoseStamped "{pose: {position: {z: -3.0}}}" # or different depth```
+
+```ros2 topic pub -r 5 /cmd_velocity geometry_msgs/msg/TwistStamped```
+
+then to activate the control
+```ros2 lifecycle set /flatfish/auv_pose_control_node activate```
 

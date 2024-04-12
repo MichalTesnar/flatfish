@@ -1,4 +1,0 @@
-Invoking command in '/home/michal/ros2_ws/src/build/my_new_package': /home/michal/.local/bin/cmake --build /home/michal/ros2_ws/src/build/my_new_package -- -j12 -l12
-Invoked command in '/home/michal/ros2_ws/src/build/my_new_package' returned '0': /home/michal/.local/bin/cmake --build /home/michal/ros2_ws/src/build/my_new_package -- -j12 -l12
-Invoking command in '/home/michal/ros2_ws/src/build/my_new_package': /home/michal/.local/bin/cmake --install /home/michal/ros2_ws/src/build/my_new_package
-Invoked command in '/home/michal/ros2_ws/src/build/my_new_package' returned '0': /home/michal/.local/bin/cmake --install /home/michal/ros2_ws/src/build/my_new_package

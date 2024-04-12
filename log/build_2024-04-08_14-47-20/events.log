@@ -1,5 +1,0 @@
-[0.000000] (-) TimerEvent: {}
-[0.000443] (-) JobUnselected: {'identifier': 'auv_control_msgs'}
-[0.000512] (-) JobUnselected: {'identifier': 'flatfish_msgs'}
-[0.000550] (-) JobUnselected: {'identifier': 'mystery'}
-[0.000690] (-) EventReactorShutdown: {}

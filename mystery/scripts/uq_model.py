@@ -4,6 +4,7 @@ from keras.layers import Input, Dense
 from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping
 from keras_uncertainty.models import SimpleEnsemble
+import time
 
 experiment_specification = {
     "EXPERIMENT_IDENTIFIER": f"Flatfish",
@@ -16,17 +17,18 @@ experiment_specification = {
     "PATIENCE": 5,
     "MAX_EPOCHS": 50,
     "ACCEPT_PROBABILITY": 0.7,
-    "INPUT_LAYER_SIZE": 10,
-    "OUTPUT_LAYER_SIZE": 6,
+    "INPUT_LAYER_SIZE": 3 + 4, # x, y, yaw, 4 thrusters 
+    "OUTPUT_LAYER_SIZE": 3, # x, y, yaw accelerations
     "UNCERTAINTY_THRESHOLD": 0.02,
     "NUMBER_OF_ESTIMATORS": 10,
     "TRAINING_BUFFERING": 10
 }
 
 class AIOModel():
-    def __init__(self, training_set, experiment_specification=experiment_specification, p=0.5) -> None:
+    def __init__(self, experiment_specification=experiment_specification, p=0.5) -> None:
         self.experiment_specification = experiment_specification
-        self.X_train, self.y_train = training_set
+        self.X_train, self.y_train = (
+            np.empty((0, 7), float), np.empty((0, 3), float))
         self.buffering_counter = 0
         self.construct_model()
 
@@ -59,7 +61,8 @@ class AIOModel():
 
         # If the buffer is not full, just append the new point
         # print("Filling in ", self.X_train.shape[0], self.experiment_specification["BUFFER_SIZE"])
-        print(f"Current Uncertainty: {uncertainty}, Skipping? : {uncertainty > self.experiment_specification['UNCERTAINTY_THRESHOLD']} Buffering: {self.buffering_counter}")
+        print(f"Current Uncertainty: {uncertainty}, Skipping? {uncertainty < self.experiment_specification['UNCERTAINTY_THRESHOLD']}")
+        print(f"Buffering: {self.buffering_counter}/{self.experiment_specification['TRAINING_BUFFERING']}")
 
 
         if self.X_train.shape[0] < self.experiment_specification["BUFFER_SIZE"]:
@@ -173,13 +176,17 @@ class AIOModel():
         Retrain yourself give the own dataset you have.
         """
         if self.buffering_counter < self.experiment_specification["TRAINING_BUFFERING"]:
-            return
+            return False
         self.buffering_counter = 0
         early_stop = EarlyStopping(
             monitor='loss', patience=self.experiment_specification["PATIENCE"])
+            
+        start_time = time.time()
         history = self.model.fit(self.X_train, self.y_train, verbose=verbose, epochs=self.experiment_specification["MAX_EPOCHS"], callbacks=[
             early_stop], batch_size=self.experiment_specification["BATCH_SIZE"])
-        return history
+        end_time = time.time()
+        print(f"Training took {end_time - start_time} seconds.")
+        return True
 
     def predict(self, points):
         """
