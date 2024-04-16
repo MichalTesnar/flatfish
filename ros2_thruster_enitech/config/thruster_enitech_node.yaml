@@ -1,0 +1,8 @@
+thruster_enitech_node:
+  ros__parameters:
+    heartbeat_period: 2.0
+    status_timeout: 5.0
+    thruster_id: 6
+    thruster_name: 'thruster_heave_front'
+    update_period: 0.1
+    use_sim_time: false

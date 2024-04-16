@@ -2,16 +2,17 @@ import rclpy
 from rclpy.node import Node
 import numpy as np
 import uuid
-
-import time
-
 from uq_model import AIOModel
-
 from flatfish_msgs.msg import ModelWeights, KerasReadyTrainingData
+
+PUBLISHER_PERIOD = 0.01
+SUBSCRIBER_QUEUE_SIZE = 10
+PUBLISHER_QUEUE_SIZE = 10
+
 
 class TrainingNode(Node):
     def __init__(self):
-        super().__init__('receiver')
+        super().__init__('trainer')
         self.have_new_data = False
         self.aio_model = AIOModel()
         self.path_to_weights = None
@@ -20,11 +21,11 @@ class TrainingNode(Node):
             KerasReadyTrainingData,
             'infered_data',
             self.incoming_data_callback,
-            10)
+            SUBSCRIBER_QUEUE_SIZE)
 
-        self.publisher_ = self.create_publisher(ModelWeights, 'model_weights_path', 10)
-        timer_period = 2  # seconds
-        self.timer = self.create_timer(timer_period, self.publisher_callback)
+        self.publisher_ = self.create_publisher(
+            ModelWeights, 'model_weights_path', PUBLISHER_QUEUE_SIZE)
+        self.timer = self.create_timer(PUBLISHER_PERIOD, self.publisher_callback)
 
     def publisher_callback(self):
         if not self.have_new_data:
@@ -39,9 +40,9 @@ class TrainingNode(Node):
 
     def incoming_data_callback(self, msg):
         sample, target = np.array(msg.sample), np.array(msg.target)
-        training_flag = self.aio_model.update_own_training_set((sample, target), msg.uncertainty)
+        training_flag = self.aio_model.update_own_training_set(
+            (sample, target), msg.uncertainty)
         if training_flag:
-            # measure time on retraining
             has_trained_flag = self.aio_model.retrain()
             if has_trained_flag:
                 self.have_new_data = True
@@ -49,14 +50,10 @@ class TrainingNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-
     training_node = TrainingNode()
-
     rclpy.spin(training_node)
-
     training_node.destroy_node()
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()

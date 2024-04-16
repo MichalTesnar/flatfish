@@ -4,3 +4,4 @@ geometry_msgs/Twist twist
 geometry_msgs/Pose pose
 ThrusterSpeeds thrusters
 float64 uncertainty
+int64 validity

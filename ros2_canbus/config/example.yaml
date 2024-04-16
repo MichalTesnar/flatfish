@@ -1,0 +1,23 @@
+# https://index.ros.org/r/generate_parameter_library/
+ros2_canbus_node:
+  ros__parameters:
+    device: 'can1'
+    device_type: 0
+    check_bus_ok_interval: 0.1
+    stats_interval: 1.0
+    system_frequency: 100.0
+    watch_devices:
+      name:
+        - motor_surge_right
+        - motor_surge_left
+        - motor_heave_back
+        - motor_heave_front
+        - motor_sway_back
+        - motor_sway_front
+      can_id:
+        - 0x08C
+        - 0x08A
+        - 0x089
+        - 0x086
+        - 0x08B
+        - 0x088

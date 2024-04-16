@@ -1,0 +1,8 @@
+uint32 can_id
+string name
+---
+uint8 DONE = 0x01
+uint8 ERROR = 0x02
+uint8 ERROR_EXIST_ID = 0x03
+uint8 ERROR_EXIST_NAME = 0x04
+uint8 result

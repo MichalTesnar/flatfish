@@ -28,7 +28,7 @@ setup(
                 'inferencer = mystery.inferencer:main',
                 'trainer = mystery.trainer:main',
                 'evaluator = mystery.evaluator:main',
-                'reading_bags = mystery.reading_bags:main',
+                'differentiator = mystery.differentiator:main',
         ],
 },
     scripts=['scripts/uq_model.py'],

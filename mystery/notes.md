@@ -21,6 +21,10 @@ all of type
 [flatfish_msgs/msg/ThrusterStatus](https://git.hb.dfki.de/flatfish/drivers/ros2_thruster_enitech/-/blob/master/msg/ThrusterStatus.msg?ref_type=heads)
 and ```flatfish/odom_simple/odom``` of type [nav_msgs/msg/Odometry](https://docs.ros2.org/foxy/api/nav_msgs/msg/Odometry.html)
 
+you should record them all as
+
+ros2 bag record -o mission /flatfish/odom_simple/odom /flatfish/thruster_surge_left/thruster_status /flatfish/thruster_surge_right/thruster_status /flatfish/thruster_sway_front/thruster_status /flatfish/thruster_sway_rear/thruster_status
+
 # to kill a malfunctioning node running on the system
  killall my_node
 
@@ -65,7 +69,7 @@ First launch stuff thrusters in a decoupled mode.
 Then make sure that on flatfish make sure the odom_simple is running
 
 To launch the pose control on flatfish
-ros2 launch flatfish_launch launch_pose_control_depth.launch.py
+```ros2 launch flatfish_launch launch_pose_control_depth.launch.py```
 
 DO NOT FORGET TO
 

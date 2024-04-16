@@ -10,11 +10,16 @@ from scipy.spatial.transform import Rotation as R
 
 
 CONVERSION_CONSTANT = 1e9
+NORMALIZE_THRUSTERS = 65
+DERIVATIVE_QUEUE_SIZE = 5
+PUBLISHER_PERIOD = 0.01
+SUBSCRIBER_QUEUE_SIZE = 10
+PUBLISHER_QUEUE_SIZE = 10
 
 
 class InferenceNode(Node):
     def __init__(self):
-        super().__init__('receiver')
+        super().__init__('inferencer')
         self.have_new_data = False
         self.current_training_data = None
         self.current_sample = None
@@ -23,32 +28,29 @@ class InferenceNode(Node):
         self.current_path_to_weights = None
         self.have_new_weights = False
         self.model = AIOModel()
-
-        # for numerical derivations
-        self.prev_data = []
+        self.prev_data = []  # for numerical derivations
 
         self.model_weights_subscription = self.create_subscription(
             ModelWeights,
             'model_weights_path',
             self.model_weights_callback,
-            10)
+            SUBSCRIBER_QUEUE_SIZE)
 
         self.thruster_subscription = self.create_subscription(
             TrainingData,
             'gathered_data',
             self.incoming_data_callback,
-            10)
+            SUBSCRIBER_QUEUE_SIZE)
 
         self.publisher_ = self.create_publisher(
-            KerasReadyTrainingData, 'infered_data', 10)
-        timer_period = 0.1  # seconds
-        self.timer = self.create_timer(timer_period, self.publisher_callback)
+            KerasReadyTrainingData, 'infered_data', PUBLISHER_QUEUE_SIZE)
+        self.timer = self.create_timer(
+            PUBLISHER_PERIOD, self.publisher_callback)
 
         self.loaded_weights_publisher_ = self.create_publisher(
-            ModelWeights, 'loaded_weights_path', 10)
-        timer_period = 0.1  # seconds
+            ModelWeights, 'loaded_weights_path', PUBLISHER_QUEUE_SIZE)
         self.timer = self.create_timer(
-            timer_period, self.loaded_weights_publisher_callback)
+            PUBLISHER_PERIOD, self.loaded_weights_publisher_callback)
 
     def publisher_callback(self):
         if not self.have_new_data:
@@ -73,13 +75,16 @@ class InferenceNode(Node):
         self.current_path_to_weights = None
         self.have_new_weights = False
 
-    def _get_accelerations(self, data, time_stamp):
-        self.prev_data.append((data, time_stamp))
-        if len(self.prev_data) <= 5:
+    def _get_accelerations(self, data, time_stamp, validity):
+        if not validity:
+            self.prev_data = []
             return False, []
-        self.prev_data = self.prev_data[-6:]
+        self.prev_data.append((data, time_stamp))
+        if len(self.prev_data) <= DERIVATIVE_QUEUE_SIZE:
+            return False, []
+        self.prev_data = self.prev_data[-(DERIVATIVE_QUEUE_SIZE+1):]
         derivatives = np.empty((0, 6), float)
-        for i in range(1, 6):
+        for i in range(1, DERIVATIVE_QUEUE_SIZE + 1):
             current_data, current_time = self.prev_data[i]
             previous_data, previous_time = self.prev_data[i-1]
             derivative = (current_data - previous_data) / \
@@ -91,7 +96,7 @@ class InferenceNode(Node):
         # get data
         time_stamp_secs = Time.from_msg(
             msg.header.stamp).nanoseconds/CONVERSION_CONSTANT
-
+        validity = msg.validity
         # get transformed velocities
         linear_x = msg.twist.linear.x
         linear_y = msg.twist.linear.y
@@ -100,25 +105,23 @@ class InferenceNode(Node):
         angular_y = msg.twist.angular.y
         angular_z = msg.twist.angular.z
         # get thruster data
-        NORMALIZE_THRUSTERS = 65
-
         thruster_surge_left = msg.thrusters.speed_surge_left/NORMALIZE_THRUSTERS
         thruster_surge_right = msg.thrusters.speed_surge_right/NORMALIZE_THRUSTERS
         thruster_sway_front = msg.thrusters.speed_sway_front/NORMALIZE_THRUSTERS
         thruster_sway_rear = msg.thrusters.speed_sway_rear/NORMALIZE_THRUSTERS
         # assemble sample
-        sample = np.array([linear_x, linear_y, angular_z, thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear])
-        #sample = np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z,
-        #                   thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear])
+        sample = np.array([linear_x, linear_y, angular_z, thruster_surge_left,
+                          thruster_surge_right, thruster_sway_front, thruster_sway_rear])
         # get accelerations
         valid_data_flag, target = self._get_accelerations(
-            np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp_secs)
+            np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp_secs, validity)
         # return if not enough data
         if not valid_data_flag:
             return
         target = np.array([target[0], target[1], target[5]])
         # assess uncertainty
         pred_mean, pred_std = self.model.predict(sample.reshape(1, -1))
+        #
         self.uncertainty = float(np.mean(pred_std))
         self.current_sample = sample
         self.current_target = target

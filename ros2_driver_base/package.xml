@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+    <name>ros2_driver_base</name>
+    <version>0.0.1</version>
+    <description>
+        This library contains a generic implementation of (i) timeout-based
+        non-blocking I/O and (ii) packet-reassembly code. It allows to write a
+        driver that will timeout on read and/or write, and to generically do
+        packet extraction in the I/O stream.
+    </description>
+    <maintainer email="tom.creutz@dfki.de">Tom Creutz</maintainer> 
+    <license>LGPL v3</license>
+
+    <buildtool_depend>ament_cmake</buildtool_depend>
+
+    <depend>boost</depend>
+    
+    <test_depend>gtest</test_depend>
+    <test_depend>google-mock</test_depend>
+
+    <export>
+        <build_type>ament_cmake</build_type>
+    </export>
+</package>

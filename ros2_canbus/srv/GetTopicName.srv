@@ -1,0 +1,4 @@
+uint32 can_id
+---
+bool is_watched
+string topic_name
