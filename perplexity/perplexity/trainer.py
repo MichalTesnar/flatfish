@@ -3,7 +3,7 @@ from rclpy.node import Node
 import numpy as np
 import uuid
 from uq_model import AIOModel
-from flatfish_msgs.msg import ModelWeights, KerasReadyTrainingData
+from flatfish_msgs.msg import ModelWeights, KerasReadyTrainingData, Dataset
 
 PUBLISHER_PERIOD = 0.01
 SUBSCRIBER_QUEUE_SIZE = 10
@@ -18,7 +18,7 @@ class TrainingNode(Node):
         self.path_to_weights = None
 
         self.training_data_subscription = self.create_subscription(
-            KerasReadyTrainingData,
+            Dataset,
             'infered_data',
             self.incoming_data_callback,
             SUBSCRIBER_QUEUE_SIZE)
@@ -37,15 +37,17 @@ class TrainingNode(Node):
         msg.path = directory_of_weights
         self.publisher_.publish(msg)
         self.get_logger().info(f'Published new weights')
+        self.have_new_data = False
 
     def incoming_data_callback(self, msg):
-        sample, target = np.array(msg.sample), np.array(msg.target)
-        training_flag = self.aio_model.update_own_training_set(
-            (sample, target), msg.uncertainty)
-        if training_flag:
-            has_trained_flag = self.aio_model.retrain()
-            if has_trained_flag:
-                self.have_new_data = True
+        dataset = msg.dataset
+        samples = np.array([data.sample for data in dataset])
+        targets = np.array([data.target for data in dataset])
+        weights = np.array([data.training_weight for data in dataset])
+        self.aio_model.update_own_training_set(samples, targets, weights)
+        self.aio_model.retrain()
+        self.have_new_data = True
+        
 
 
 def main(args=None):

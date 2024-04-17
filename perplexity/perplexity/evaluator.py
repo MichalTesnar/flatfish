@@ -48,6 +48,7 @@ class EvaluatorNode(Node):
         # self.get_logger().info(f'Published new data')
 
     def model_weights_callback(self, msg):
+        # print('Model weights received')
         model_path = msg.path
         self.model.model.load_weights(model_path)
         rmtree(model_path)
