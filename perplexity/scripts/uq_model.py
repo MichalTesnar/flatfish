@@ -9,19 +9,16 @@ import time
 experiment_specification = {
     "EXPERIMENT_IDENTIFIER": f"Flatfish",
     "BUFFER_SIZE": 200,
-    "MODEL_MODE": "THRESHOLD",
     "NUMBER_OF_LAYERS": 1,
     "UNITS_PER_LAYER": 16,
     "LEARNING_RATE": 10e-3,
     "BATCH_SIZE": 4,
     "PATIENCE": 5,
-    "MAX_EPOCHS": 10,
-    "ACCEPT_PROBABILITY": 0.7,
+    "MAX_EPOCHS": 1,
     "INPUT_LAYER_SIZE": 3 + 4, # x, y, yaw, 4 thrusters 
     "OUTPUT_LAYER_SIZE": 3, # x, y, yaw accelerations
     "UNCERTAINTY_THRESHOLD": 0.02,
     "NUMBER_OF_ESTIMATORS": 10,
-    "TRAINING_BUFFERING": 10
 }
 
 class AIOModel():

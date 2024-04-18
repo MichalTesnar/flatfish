@@ -17,7 +17,7 @@ DERIVATIVE_QUEUE_SIZE = 5
 
 class Differentiator(Node):
     def __init__(self):
-        super().__init__('receiver')
+        super().__init__('differentiator')
         self._have_new_data = False
         self._current_twist = None
         self._current_pose = None

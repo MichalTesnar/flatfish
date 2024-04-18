@@ -30,8 +30,8 @@ class ReplayBuffer():
             indices = np.random.choice(len(self.buffer), batch_size, replace=False)
             samples = [self.buffer[index] for index in indices]
             for sample in samples:
-                sample.training_weight = 1
-            return samples
+                sample.training_weight = float(1)
+            return samples, 1
         elif self.mode == 'score':
             beta = self.beta_schedule(episode_number)
             probabilities = self.scores[:len(self.buffer)] ** self.alpha
@@ -41,6 +41,7 @@ class ReplayBuffer():
             samples = [self.buffer[i] for i in indices]
             weights = (len(self.buffer) * probabilities[indices]) ** (-beta)
             weights /= weights.max()     # normalize weights
+            maximum_score = np.max(self.scores[indices])
             for sample, weight in zip(samples, weights):
                 sample.training_weight = float(weight)
-            return samples
+            return samples, maximum_score

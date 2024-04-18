@@ -4,7 +4,7 @@ from tensorflow.keras import models
 import rclpy
 from rclpy.node import Node
 from rclpy.time import Time
-from flatfish_msgs.msg import TrainingData, ModelWeights, Dataset, KerasReadyTrainingData
+from flatfish_msgs.msg import ModelWeights, Dataset, KerasReadyTrainingData
 from shutil import rmtree
 import numpy as np
 
@@ -16,10 +16,10 @@ PUBLISHER_PERIOD = 0.01
 SUBSCRIBER_QUEUE_SIZE = 10
 PUBLISHER_QUEUE_SIZE = 10
 
-UNCERTAINTY_COEFFICIENT = 0.1
-PRIORITY_COEFFICIENT = 0.1
-UNCERTAINTY_THRESHOLD = 0.1
-TRAINING_COUNTER = 200
+UNCERTAINTY_COEFFICIENT = 0
+PRIORITY_COEFFICIENT = 1
+TRAINING_THRESHOLD = 0.1
+TRAINING_COUNTER = 100
 QUEUE_SIZE = 10000
 
 TRAINING_SET_SIZE = TRAINING_COUNTER
@@ -27,7 +27,7 @@ TRAINING_SET_SIZE = TRAINING_COUNTER
 class InferenceNode(Node):
     def __init__(self):
         super().__init__('inferencer')
-        self.buffer = ReplayBuffer(QUEUE_SIZE, mode='score')
+        self.buffer = ReplayBuffer(QUEUE_SIZE, mode='uniform')
         self.counter = 0
         self.episode_counter = 0
 
@@ -62,7 +62,11 @@ class InferenceNode(Node):
         if self.counter < TRAINING_COUNTER:
             return
         
-        weighted_dataset = self.buffer.sample(TRAINING_SET_SIZE, self.episode_counter)
+        weighted_dataset, maximum_score = self.buffer.sample(TRAINING_SET_SIZE, self.episode_counter)
+
+        if maximum_score < TRAINING_THRESHOLD:
+            self.get_logger().info(f'P: Data not good enough :)')
+            return
 
         msg = Dataset()
         msg.dataset = weighted_dataset
@@ -83,13 +87,13 @@ class InferenceNode(Node):
         self.have_new_weights = False
 
     def incoming_data_callback(self, msg):
-        self.get_logger().info(f'S: New Data ' + ' Counter ' + str(self.counter))
         sample = np.array(msg.sample)
         target = np.array(msg.target)
         pred_mean, pred_std = self.model.predict(sample.reshape(1, -1))
         uncertainty = float(np.mean(pred_std))
         priority = float(np.sum(np.square(target - pred_mean)))
-        # print(f'U: {uncertainty} P: {priority}')
+        
+        self.get_logger().info(f'Counter {self.counter} U: {uncertainty} P: {priority}')
         score = PRIORITY_COEFFICIENT * priority + UNCERTAINTY_COEFFICIENT * uncertainty
 
         msg = KerasReadyTrainingData()
