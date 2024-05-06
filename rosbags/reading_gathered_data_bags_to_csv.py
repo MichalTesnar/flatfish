@@ -2,7 +2,10 @@ import rosbag_api as bag
 from rosidl_runtime_py.utilities import get_message
 from rclpy.serialization import deserialize_message
 
-name = 'long_mission2_for_test_set'
+import sys
+
+# name = 'long_mission_for_test_set'
+name = sys.argv[1]
 
 bag_file = f'{name}/{name}_0.db3'
 topic_name = '/gathered_data'

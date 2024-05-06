@@ -16,24 +16,24 @@ PUBLISHER_PERIOD = 0.01
 SUBSCRIBER_QUEUE_SIZE = 10
 PUBLISHER_QUEUE_SIZE = 10
 
-UNCERTAINTY_COEFFICIENT = 0
-PRIORITY_COEFFICIENT = 1
+# UNCERTAINTY_COEFFICIENT = 1
+# PRIORITY_COEFFICIENT = 0
 TRAINING_THRESHOLD = 0.1
 TRAINING_COUNTER = 100
-QUEUE_SIZE = 10000
+QUEUE_SIZE = 1000
 
 TRAINING_SET_SIZE = TRAINING_COUNTER
 
 class InferenceNode(Node):
     def __init__(self):
         super().__init__('inferencer')
-        self.buffer = ReplayBuffer(QUEUE_SIZE, mode='uniform')
+        self.model = AIOModel()
+        self.buffer = ReplayBuffer(self.model, QUEUE_SIZE, mode='uniform') # "score" or "uniform"
         self.counter = 0
         self.episode_counter = 0
 
         self.current_path_to_weights = None
         self.have_new_weights = False
-        self.model = AIOModel()
 
         self.model_weights_subscription = self.create_subscription(
             ModelWeights,
@@ -62,7 +62,14 @@ class InferenceNode(Node):
         if self.counter < TRAINING_COUNTER:
             return
         
-        weighted_dataset, maximum_score = self.buffer.sample(TRAINING_SET_SIZE, self.episode_counter)
+        dataset, weights, maximum_score = self.buffer.sample(TRAINING_SET_SIZE, self.episode_counter)
+        weighted_dataset = []
+        for ((sample, target), weight) in zip(dataset, weights):
+            msg = KerasReadyTrainingData()
+            msg.sample = sample
+            msg.target = target
+            msg.training_weight = float(weight)
+            weighted_dataset.append(msg)
 
         if maximum_score < TRAINING_THRESHOLD:
             self.get_logger().info(f'P: Data not good enough :)')
@@ -89,21 +96,9 @@ class InferenceNode(Node):
     def incoming_data_callback(self, msg):
         sample = np.array(msg.sample)
         target = np.array(msg.target)
-        pred_mean, pred_std = self.model.predict(sample.reshape(1, -1))
-        uncertainty = float(np.mean(pred_std))
-        priority = float(np.sum(np.square(target - pred_mean)))
-        
-        self.get_logger().info(f'Counter {self.counter} U: {uncertainty} P: {priority}')
-        score = PRIORITY_COEFFICIENT * priority + UNCERTAINTY_COEFFICIENT * uncertainty
 
-        msg = KerasReadyTrainingData()
-        msg.sample = sample
-        msg.target = target
-        msg.uncertainty = uncertainty
-        msg.priority = priority
-        msg.score = score
-
-        self.buffer.push(msg, score)
+        self.buffer.push((sample, target))
+        self.get_logger().info(f'S: Data received')
         self.counter += 1
 
     def model_weights_callback(self, msg):

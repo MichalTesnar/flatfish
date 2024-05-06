@@ -12,7 +12,9 @@ PUBLISHER_QUEUE_SIZE = 10
 SUBSCRIBER_QUEUE_SIZE = 10
 CONVERSION_CONSTANT = 1e9
 NORMALIZE_THRUSTERS = 65
-DERIVATIVE_QUEUE_SIZE = 5
+
+DERIVATIVE_QUEUE_SIZE = 15
+SPEED_QUEUE_SIZE = 10
 
 
 class Differentiator(Node):
@@ -22,7 +24,8 @@ class Differentiator(Node):
         self._current_twist = None
         self._current_pose = None
         self._time_stamp = None
-        self._prev_data = []
+        self._prev_accelerations = []
+        self._prev_speeds = np.empty((0, 6), float)
 
         self.odometry_subscription = self.create_subscription(
             Odometry,
@@ -49,29 +52,41 @@ class Differentiator(Node):
     def check_data_validity(self, data):
         return not (isnan(data.linear.x) or isnan(data.linear.y) or isnan(data.linear.z))
 
+    def _get_speeds(self, data, time_stamp, validity):
+        if not validity:
+            self._prev_speeds = np.empty((0, 6), float)
+            return False, []
+        self._prev_speeds = np.vstack((self._prev_speeds, np.array(data)))
+        if self._prev_speeds.shape[0] < SPEED_QUEUE_SIZE:
+            return False, []
+        self._prev_speeds = self._prev_speeds[-(SPEED_QUEUE_SIZE+1):]
+        return True, np.mean(self._prev_speeds, axis=0)
+
+
     def _get_accelerations(self, data, time_stamp, validity):
         if not validity:
-            self._prev_data = []
+            self._prev_accelerations = []
             return False, []
-        self._prev_data.append((data, time_stamp))
-        if len(self._prev_data) <= DERIVATIVE_QUEUE_SIZE:
+        self._prev_accelerations.append((data, time_stamp))
+        if len(self._prev_accelerations) <= DERIVATIVE_QUEUE_SIZE:
             return False, []
-        self._prev_data = self._prev_data[-(DERIVATIVE_QUEUE_SIZE+1):]
+        self._prev_accelerations = self._prev_accelerations[-(DERIVATIVE_QUEUE_SIZE+1):]
         derivatives = np.empty((0, 6), float)
         for i in range(1, DERIVATIVE_QUEUE_SIZE + 1):
-            current_data, current_time = self._prev_data[i]
-            previous_data, previous_time = self._prev_data[i-1]
+            current_data, current_time = self._prev_accelerations[i]
+            previous_data, previous_time = self._prev_accelerations[i-1]
             derivative = (current_data - previous_data) / \
                 (current_time - previous_time)
             derivatives = np.vstack((derivatives, derivative))
-        return True, np.mean(derivatives, axis=0)
+        return True, np.median(derivatives, axis=0)
 
     def incoming_data_callback(self, msg):
-        # get data
+        # get data & unapack it
         time_stamp_secs = Time.from_msg(
             msg.header.stamp).nanoseconds/CONVERSION_CONSTANT
         validity = self.check_data_validity(msg.twist.twist)
         self._time_stamp = msg.header.stamp
+
         # get transformed velocities
         linear_x = msg.twist.twist.linear.x
         linear_y = msg.twist.twist.linear.y
@@ -79,14 +94,23 @@ class Differentiator(Node):
         angular_x = msg.twist.twist.angular.x
         angular_y = msg.twist.twist.angular.y
         angular_z = msg.twist.twist.angular.z
-        # get thruster data
+
+        # get speeds as median of last SPEED_QUEUE_SIZE speeds
+        speed_validity, speeds = self._get_speeds(np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp_secs, validity)
+        if speed_validity:
+            linear_x, linear_y, linear_z, angular_x, angular_y, angular_z = speeds
+
+        # construct sample
         sample = np.array([linear_x, linear_y, angular_z, 0, 0, 0, 0])
-        # get accelerations
-        valid_data_flag, target = self._get_accelerations(
+        
+        # get accelerations as median of last DERIVATIVE_QUEUE_SIZE accelerations
+        accelerations_validity, target = self._get_accelerations(
             np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp_secs, validity)
+        
         # return if not enough data
-        if not valid_data_flag:
+        if not accelerations_validity or not speed_validity:
             return
+        
         # prepare for publishing
         target = np.array([target[0], target[1], target[5]])
         self._current_sample = sample

@@ -1,14 +1,13 @@
 from uq_model import AIOModel
-from tensorflow.keras import models
 import rclpy
 from rclpy.node import Node
-from rclpy.time import Time
-from flatfish_msgs.msg import EvaluationMetrics, ModelWeights, KerasReadyTrainingData
+from flatfish_msgs.msg import EvaluationMetrics, ModelWeights
 from shutil import rmtree
 import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score
 import csv
+import os
 
 CONVERSION_CONSTANT = 1e9
 PUBLISHER_PERIOD = 0.1
@@ -22,7 +21,7 @@ class EvaluatorNode(Node):
         super().__init__('evaluator')
         self.have_new_data = False
         self.model = AIOModel()
-        self.data = pd.read_csv('src/rosbags/long_mission2_for_test_set.csv')
+        self.data = pd.read_csv("test_set.csv")
         self.test_sample = self.data.iloc[:, :FEATURES].values
         self.test_target = self.data.iloc[:, FEATURES:].values
         self.test_set_size = len(self.test_sample)
@@ -39,7 +38,7 @@ class EvaluatorNode(Node):
             SUBSCRIBER_QUEUE_SIZE)
 
         self.publisher_ = self.create_publisher(
-            EvaluationMetrics, 'evaluation_metrics_uniform', PUBLISHER_QUEUE_SIZE)
+            EvaluationMetrics, 'evaluation_metrics', PUBLISHER_QUEUE_SIZE)
         self.timer = self.create_timer(PUBLISHER_PERIOD, self.publisher_callback)
 
     def publisher_callback(self):
