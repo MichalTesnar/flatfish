@@ -11,8 +11,8 @@ import os
 
 CONVERSION_CONSTANT = 1e9
 PUBLISHER_PERIOD = 0.1
-PUBLISHER_QUEUE_SIZE = 10
-SUBSCRIBER_QUEUE_SIZE = 10
+PUBLISHER_QUEUE_SIZE = 100
+SUBSCRIBER_QUEUE_SIZE = 100
 FEATURES = 7
 
 
@@ -22,6 +22,9 @@ class EvaluatorNode(Node):
         self.have_new_data = False
         self.model = AIOModel()
         self.data = pd.read_csv("test_set.csv")
+        # normalize the data between 0 and 1
+        self.data = (self.data - self.data.min()) / (self.data.max() - self.data.min())
+
         self.test_sample = self.data.iloc[:, :FEATURES].values
         self.test_target = self.data.iloc[:, FEATURES:].values
         self.test_set_size = len(self.test_sample)

@@ -13,13 +13,11 @@ CONVERSION_CONSTANT = 1e9
 NORMALIZE_THRUSTERS = 65
 DERIVATIVE_QUEUE_SIZE = 5
 PUBLISHER_PERIOD = 0.01
-SUBSCRIBER_QUEUE_SIZE = 10
-PUBLISHER_QUEUE_SIZE = 10
+SUBSCRIBER_QUEUE_SIZE = 100
+PUBLISHER_QUEUE_SIZE = 100
 
-# UNCERTAINTY_COEFFICIENT = 1
-# PRIORITY_COEFFICIENT = 0
-TRAINING_THRESHOLD = 0.1
-TRAINING_COUNTER = 100
+TRAINING_THRESHOLD = 0
+TRAINING_COUNTER = 50
 QUEUE_SIZE = 1000
 
 TRAINING_SET_SIZE = TRAINING_COUNTER
@@ -28,7 +26,7 @@ class InferenceNode(Node):
     def __init__(self):
         super().__init__('inferencer')
         self.model = AIOModel()
-        self.buffer = ReplayBuffer(self.model, QUEUE_SIZE, mode='uniform') # "score" or "uniform"
+        self.buffer = ReplayBuffer(self.model, QUEUE_SIZE, mode='score') # "score" or "uniform"
         self.counter = 0
         self.episode_counter = 0
 
@@ -74,7 +72,6 @@ class InferenceNode(Node):
         if maximum_score < TRAINING_THRESHOLD:
             self.get_logger().info(f'P: Data not good enough :)')
             return
-
         msg = Dataset()
         msg.dataset = weighted_dataset
 

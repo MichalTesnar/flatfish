@@ -6,8 +6,8 @@ from uq_model import AIOModel
 from flatfish_msgs.msg import ModelWeights, KerasReadyTrainingData, Dataset
 
 PUBLISHER_PERIOD = 0.01
-SUBSCRIBER_QUEUE_SIZE = 10
-PUBLISHER_QUEUE_SIZE = 10
+SUBSCRIBER_QUEUE_SIZE = 100
+PUBLISHER_QUEUE_SIZE = 100
 
 
 class TrainingNode(Node):
@@ -47,7 +47,6 @@ class TrainingNode(Node):
         self.aio_model.update_own_training_set(samples, targets, weights)
         self.aio_model.retrain()
         self.have_new_data = True
-        
 
 
 def main(args=None):

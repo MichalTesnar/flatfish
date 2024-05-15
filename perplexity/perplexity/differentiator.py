@@ -8,13 +8,13 @@ from nav_msgs.msg import Odometry
 
 ALLOWED_TIME_DIFFERENCE = 0.05
 PUBLISHER_PERIOD = 0.01
-PUBLISHER_QUEUE_SIZE = 10
-SUBSCRIBER_QUEUE_SIZE = 10
+PUBLISHER_QUEUE_SIZE = 100
+SUBSCRIBER_QUEUE_SIZE = 100
 CONVERSION_CONSTANT = 1e9
 NORMALIZE_THRUSTERS = 65
 
 DERIVATIVE_QUEUE_SIZE = 15
-SPEED_QUEUE_SIZE = 10
+SPEED_QUEUE_SIZE = 15
 
 
 class Differentiator(Node):
@@ -60,7 +60,7 @@ class Differentiator(Node):
         if self._prev_speeds.shape[0] < SPEED_QUEUE_SIZE:
             return False, []
         self._prev_speeds = self._prev_speeds[-(SPEED_QUEUE_SIZE+1):]
-        return True, np.mean(self._prev_speeds, axis=0)
+        return True, np.median(self._prev_speeds, axis=0)
 
 
     def _get_accelerations(self, data, time_stamp, validity):
@@ -113,9 +113,21 @@ class Differentiator(Node):
         
         # prepare for publishing
         target = np.array([target[0], target[1], target[5]])
+        sample, target = self.normalize_data(sample, target)
         self._current_sample = sample
         self._current_target = target
         self._have_new_data = True
+    
+    def normalize_data(self, sample, target):
+        sample_minima = np.array([-0.385764, -0.243482, -0.263339, -70.999994, -74.141587, -87.964594, -75.398224])
+        sample_maxima = np.array([0.337219, 0.242746, 0.305876, 70.371675, 70.371675, 82.309728, 70.999994])
+        target_minima = np.array([-0.121988, -0.085652, -0.132093])
+        target_maxima = np.array([0.115363, 0.084343, 0.128681])
+        sample = (sample - np.array([0.385764, ]))/(0.337219 + 0.385764)
+        sample = (sample - sample_minima)/(sample_maxima - sample_minima)
+        target = (target - target_minima)/(target_maxima - target_minima)
+        return sample, target
+
 
 
 def main(args=None):

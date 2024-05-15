@@ -11,7 +11,17 @@ FEATURES = 7
 import sys
 
 file_name = sys.argv[1]
+# train_data = pd.read_csv(f'{file_name}.csv', skiprows = 2000, nrows=2800)
+# train_data = pd.read_csv(f'{file_name}.csv', skiprows = 1500, nrows=5000)
 train_data = pd.read_csv(f'{file_name}.csv')
+# normalize the data between 0 and 1
+
+print(train_data.max())
+print(train_data.min())
+
+train_data = (train_data - train_data.min())/(train_data.max() - train_data.min())
+
+
 train_sample = train_data.iloc[:, :FEATURES].values
 train_target = train_data.iloc[:, FEATURES:].values
 
@@ -39,10 +49,9 @@ for i in range(6):
     axs[i].plot(train_sample[:,i], label='True')
 
 
-
+targets_fig, targets_axs = plt.subplots(3, 1, figsize=(10, 10)) 
 for i in range(3):
-    plt.figure()
-    plt.plot(train_target[:,i], label='True')
+    targets_axs[i].plot(train_target[:,i], label='True')
     # plt.plot(pred_mean[:,i], label='Pred')
 plt.show()
 

@@ -1,8 +1,7 @@
 import numpy as np
 
-
-UNCERTAINTY_COEFFICIENT = 0
-PRIORITY_COEFFICIENT = 1
+UNCERTAINTY_COEFFICIENT = 1
+PRIORITY_COEFFICIENT = 0
 
 class ReplayBuffer():
     def __init__(self, model, capacity, mode='uniform'):
@@ -12,7 +11,7 @@ class ReplayBuffer():
         self.buffer = []
         self.position = 0
 
-        self.alpha = 0.6
+        self.alpha = 0.7
         self.epsilon = 1e-5
         
         self.beta_schedule = lambda episode: min(1.0, 0.4 + episode * (1.0 - 0.4) / 1000)  # linear schedule
@@ -53,7 +52,8 @@ class ReplayBuffer():
 
             indices = np.random.choice(len(self.buffer), size=batch_size, p=probabilities)
             samples = [self.buffer[i] for i in indices]
-            weights = (len(self.buffer) * probabilities[indices]) ** (-beta)
+            # weights = (len(self.buffer) * probabilities[indices]) ** (-beta)
+            weights = probabilities[indices]
             weights /= weights.max()     # normalize weights
             maximum_score = np.max(scores[indices])
             return samples, weights, maximum_score

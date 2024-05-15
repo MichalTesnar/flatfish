@@ -1,10 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
-paths = ["evaluation_metrics-normal.csv", "evaluation_metrics-priority.csv", "evaluation_metrics-uncertainty.csv"]
-# paths = ["evaluation_metrics-normal.csv", "evaluation_metrics-priority.csv"]
-# paths = ["evaluation_metrics-normal.csv", "evaluation_metrics-uncertainty.csv"]
+paths = []
+for file in ["evaluation_metrics-normal.csv", "evaluation_metrics-priority.csv", "evaluation_metrics-uncertainty.csv"]:
+    if os.path.exists(file):
+        paths.append(file)
 
 
 for csv_path in paths:
@@ -14,7 +16,7 @@ for csv_path in paths:
     mse = data[column_1_name]
     r2 = data[column_2_name]
 
-    mse = np.minimum(mse, 0.2)
+    mse = np.minimum(mse, 0.1)
 
 
     # Create the plot
@@ -22,6 +24,9 @@ for csv_path in paths:
 
 # Add legend
 plt.legend()
+plt.xlabel("Epoch")
+plt.ylabel("MSE")
+plt.title("MSE vs Epoch")
 
 # Display the plot
 plt.grid(True)
