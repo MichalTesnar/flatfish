@@ -18,14 +18,14 @@ def generate_launch_description():
             executable='inferencer',
             name='inferencer'
         ),
-        Node(
-            package='perplexity',
-            executable='trainer',
-            name='trainer'
-        ),
-        Node(
-            package='perplexity',
-            executable='evaluator',
-            name='evaluator'
-        ),        
+        # Node(
+        #     package='perplexity',
+        #     executable='trainer',
+        #     name='trainer'
+        # ),
+        # Node(
+        #     package='perplexity',
+        #     executable='evaluator',
+        #     name='evaluator'
+        # ),        
     ])

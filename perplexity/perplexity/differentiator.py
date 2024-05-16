@@ -13,8 +13,13 @@ SUBSCRIBER_QUEUE_SIZE = 100
 CONVERSION_CONSTANT = 1e9
 NORMALIZE_THRUSTERS = 65
 
-DERIVATIVE_QUEUE_SIZE = 15
-SPEED_QUEUE_SIZE = 15
+DERIVATIVE_QUEUE_SIZE = 10
+SPEED_QUEUE_SIZE = 20
+
+# SAMPLE_MINIMA = np.array([-0.385764, -0.243482, -0.263339, -70.999994, -74.141587, -87.964594, -75.398224])
+# SAMPLE_MAXIMA = np.array([0.337219, 0.242746, 0.305876, 70.371675, 70.371675, 82.309728, 70.999994])
+# TARGET_MINIMA = np.array([-0.121988, -0.085652, -0.132093])
+# TARGET_MAXIMA = np.array([0.115363, 0.084343, 0.128681])
 
 
 class Differentiator(Node):
@@ -60,7 +65,7 @@ class Differentiator(Node):
         if self._prev_speeds.shape[0] < SPEED_QUEUE_SIZE:
             return False, []
         self._prev_speeds = self._prev_speeds[-(SPEED_QUEUE_SIZE+1):]
-        return True, np.median(self._prev_speeds, axis=0)
+        return True, np.mean(self._prev_speeds, axis=0)
 
 
     def _get_accelerations(self, data, time_stamp, validity):
@@ -78,7 +83,7 @@ class Differentiator(Node):
             derivative = (current_data - previous_data) / \
                 (current_time - previous_time)
             derivatives = np.vstack((derivatives, derivative))
-        return True, np.median(derivatives, axis=0)
+        return True, np.mean(derivatives, axis=0)
 
     def incoming_data_callback(self, msg):
         # get data & unapack it
@@ -119,13 +124,8 @@ class Differentiator(Node):
         self._have_new_data = True
     
     def normalize_data(self, sample, target):
-        sample_minima = np.array([-0.385764, -0.243482, -0.263339, -70.999994, -74.141587, -87.964594, -75.398224])
-        sample_maxima = np.array([0.337219, 0.242746, 0.305876, 70.371675, 70.371675, 82.309728, 70.999994])
-        target_minima = np.array([-0.121988, -0.085652, -0.132093])
-        target_maxima = np.array([0.115363, 0.084343, 0.128681])
-        sample = (sample - np.array([0.385764, ]))/(0.337219 + 0.385764)
-        sample = (sample - sample_minima)/(sample_maxima - sample_minima)
-        target = (target - target_minima)/(target_maxima - target_minima)
+        # sample = (sample - SAMPLE_MINIMA)/(SAMPLE_MAXIMA - SAMPLE_MINIMA)
+        # target = (target - TARGET_MINIMA)/(TARGET_MAXIMA - TARGET_MINIMA)
         return sample, target
 
 
