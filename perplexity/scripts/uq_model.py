@@ -8,13 +8,12 @@ import time
 
 experiment_specification = {
     "EXPERIMENT_IDENTIFIER": f"Flatfish",
-    "BUFFER_SIZE": 200,
-    "NUMBER_OF_LAYERS": 2,
-    "UNITS_PER_LAYER": 16,
+    "NUMBER_OF_LAYERS": 4,
+    "UNITS_PER_LAYER": 32,
     "LEARNING_RATE": 10e-3,
     "BATCH_SIZE": 4,
-    "PATIENCE": 5,
-    "MAX_EPOCHS": 10,
+    "PATIENCE": 10,
+    "MAX_EPOCHS": 50,
     "INPUT_LAYER_SIZE": 3 + 4, # x, y, yaw, 4 thrusters 
     "OUTPUT_LAYER_SIZE": 3, # x, y, yaw accelerations
     "UNCERTAINTY_THRESHOLD": 0.02,
