@@ -11,8 +11,8 @@ import os
 
 CONVERSION_CONSTANT = 1e9
 PUBLISHER_PERIOD = 0.1
-PUBLISHER_QUEUE_SIZE = 100
-SUBSCRIBER_QUEUE_SIZE = 100
+PUBLISHER_QUEUE_SIZE = 1000
+SUBSCRIBER_QUEUE_SIZE = 1000
 FEATURES = 7
 
 
@@ -25,8 +25,19 @@ class EvaluatorNode(Node):
         # normalize the data between 0 and 1
         self.data = (self.data - self.data.min()) / (self.data.max() - self.data.min())
 
-        self.test_sample = self.data.iloc[:, :FEATURES].values
-        self.test_target = self.data.iloc[:, FEATURES:].values
+        # self.test_sample = self.data.iloc[:, :FEATURES].values
+        # self.test_target = self.data.iloc[:, FEATURES:].values
+
+
+        X_cols = [0, 1, 2, 7, 8, 9]
+        self.test_sample = self.data.iloc[:, X_cols].values
+        y_cols = [3, 4, 5, 6]
+        self.test_target = self.data.iloc[:, y_cols].values
+
+
+
+
+
         self.test_set_size = len(self.test_sample)
 
         # create new file to write mse and r2 into

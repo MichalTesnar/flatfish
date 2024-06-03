@@ -8,26 +8,12 @@ from nav_msgs.msg import Odometry
 
 ALLOWED_TIME_DIFFERENCE = 0.05
 PUBLISHER_PERIOD = 0.01
-PUBLISHER_QUEUE_SIZE = 100
-SUBSCRIBER_QUEUE_SIZE = 100
+PUBLISHER_QUEUE_SIZE = 1000
+SUBSCRIBER_QUEUE_SIZE = 1000
 CONVERSION_CONSTANT = 1e9
-NORMALIZE_THRUSTERS = 65
 
 DERIVATIVE_QUEUE_SIZE = 10
 SPEED_QUEUE_SIZE = 30
-
-# SAMPLE_MEAN = np.array([0.015017, -0.006134, 0.005159, 6.856136, 8.140416, 5.128215, 0.364308])
-# TARGET_MEAN = np.array([-0.000012, -0.000016, 0.000199])
-# SAMPLE_STD = np.array([0.168815, 0.073651, 0.104550, 43.058020, 43.800412, 40.593331, 36.992126])
-# TARGET_STD = np.array([0.028731, 0.013512, 0.029200])
-
-SAMPLE_MIN = np.array([-0.386857, -0.243133, -0.263060, -70.999994, -74.141587, -87.964594, 75.398224])
-
-TARGET_MIN = np.array([-0.114964, -0.082259, -0.116914])
-
-SAMPLE_MAX = np.array([0.335678, 0.242716, 0.303403, 70.371675, 70.371675, 82.309728, 70.999994])
-
-TARGET_MAX = np.array([0.114743, 0.079477, 0.122234])
 
 class Differentiator(Node):
     def __init__(self):
@@ -56,10 +42,11 @@ class Differentiator(Node):
         msg = KerasReadyTrainingData()
         msg.sample = self._current_sample
         msg.target = self._current_target
+
         msg.header.stamp = self._time_stamp
         self._publisher_.publish(msg)
         self._have_new_data = False
-        self.get_logger().info('I published!')
+        # self.get_logger().info('I published!')
 
     def check_data_validity(self, data):
         return not (isnan(data.linear.x) or isnan(data.linear.y) or isnan(data.linear.z))
@@ -118,24 +105,18 @@ class Differentiator(Node):
         # get accelerations as median of last DERIVATIVE_QUEUE_SIZE accelerations
         accelerations_validity, target = self._get_accelerations(
             np.array([linear_x, linear_y, linear_z, angular_x, angular_y, angular_z]), time_stamp_secs, validity)
-        
         # return if not enough data
         if not accelerations_validity or not speed_validity:
             return
         
-        # prepare for publishing
-        target = np.array([target[0], target[1], target[5]])
-        sample, target = self.normalize_data(sample, target)
+        
+        sample = np.array([linear_x, linear_y, angular_z, target[0], target[1], target[5]])
+        target = np.zeros(4)
+
         self._current_sample = sample
         self._current_target = target
         self._have_new_data = True
     
-    def normalize_data(self, sample, target):
-        # sample = (sample - SAMPLE_MEAN) / SAMPLE_STD
-        # target = (target - TARGET_MEAN) / TARGET_STD
-        sample = (sample - SAMPLE_MIN) / (SAMPLE_MAX - SAMPLE_MIN)
-        target = (target - TARGET_MIN) / (TARGET_MAX - TARGET_MIN)
-        return sample, target
 
 
 def main(args=None):

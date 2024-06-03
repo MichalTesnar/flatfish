@@ -4,8 +4,8 @@ import numpy as np
 import os
 
 paths = []
-# for file in ["evaluation_metrics-normal.csv", "evaluation_metrics-priority.csv", "evaluation_metrics-uncertainty.csv"]:
-for file in ["evaluation_metrics-normal.csv"]:
+for file in ["evaluation_metrics-normal.csv", "evaluation_metrics-priority.csv", "evaluation_metrics-uncertainty.csv"]:
+# for file in ["evaluation_metrics-normal.csv"]:
     if os.path.exists(file):
         paths.append(file)
 
@@ -26,9 +26,9 @@ for csv_path in paths:
 
 # Add legend
 plt.legend()
-plt.xlabel("Epoch")
-plt.ylabel("MSE")
-plt.title("MSE vs Epoch")
+plt.xlabel("Epoch", fontsize=14)
+plt.ylabel("R2", fontsize=14)
+plt.title("R2 vs Epoch", fontsize=14)
 
 # Display the plot
 plt.grid(True)

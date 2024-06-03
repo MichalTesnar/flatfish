@@ -11,11 +11,13 @@ experiment_specification = {
     "NUMBER_OF_LAYERS": 4,
     "UNITS_PER_LAYER": 64,
     "LEARNING_RATE": 10e-3,
-    "BATCH_SIZE": 2,
+    "BATCH_SIZE": 32,
     "PATIENCE": 20,
     "MAX_EPOCHS": 100,
     "INPUT_LAYER_SIZE": 3 + 4, # x, y, yaw, 4 thrusters 
     "OUTPUT_LAYER_SIZE": 3, # x, y, yaw accelerations
+    # "INPUT_LAYER_SIZE": 3 + 3, # x, y, yaw speeds and accelerations
+    # "OUTPUT_LAYER_SIZE": 4, # 4 thruster values
     "UNCERTAINTY_THRESHOLD": 0.02,
     "NUMBER_OF_ESTIMATORS": 10,
 }

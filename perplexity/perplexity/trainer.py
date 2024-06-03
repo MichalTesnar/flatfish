@@ -6,8 +6,8 @@ from uq_model import AIOModel
 from flatfish_msgs.msg import ModelWeights, KerasReadyTrainingData, Dataset
 
 PUBLISHER_PERIOD = 0.01
-SUBSCRIBER_QUEUE_SIZE = 100
-PUBLISHER_QUEUE_SIZE = 100
+SUBSCRIBER_QUEUE_SIZE = 1000
+PUBLISHER_QUEUE_SIZE = 1000
 
 
 class TrainingNode(Node):

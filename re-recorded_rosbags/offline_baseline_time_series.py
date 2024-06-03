@@ -1,4 +1,4 @@
-from uq_model import AIOModel
+from uq_model_time_series import AIOModel
 from tensorflow.keras import models
 import rclpy
 from rclpy.node import Node
@@ -13,29 +13,43 @@ import csv
 
 from matplotlib import pyplot as plt
 
-FEATURES = 7
 OVERFIT = True
-
 
 model = AIOModel()
 
-train_data = pd.read_csv('long_mission2_smooth30.csv', nrows=5000)
-# data should be already normalized
-# normalize onto [0, 1]
-# train_data = (train_data - train_data.min())/(train_data.max() - train_data.min())
-# train_data = (train_data - train_data.mean())/(train_data.std())
+train_data = pd.read_csv('long_mission2_smooth30.csv')
+
+# take just first 6 columns
+train_data = train_data.iloc[:, :6]
+# normalize
+train_data = (train_data - train_data.mean())/(train_data.std())
+# apply rolling mean to the data
 # train_data = train_data.rolling(window=15).mean()
 # remove nans
 train_data = train_data.dropna()
 
-X = train_data.iloc[:, :FEATURES].values
-y = train_data.iloc[:, FEATURES:].values
+lenght = train_data.shape[0]
 
-# y_cols = [3, 4, 5, 6]
-# y = train_data.iloc[:, y_cols].values
+# make the data into time series
+# combine 5 consecutive rows into one row
 
-# X_cols = [0, 1, 2, 7, 8, 9]
-# X = train_data.iloc[:, X_cols].values
+X = []
+y = []
+
+for i in range(5, lenght):
+    sample1 = train_data.iloc[i-5]
+    sample2 = train_data.iloc[i-4]
+    sample3 = train_data.iloc[i-3]
+    sample4 = train_data.iloc[i-2]
+    sample5 = train_data.iloc[i-1]
+    target = train_data.iloc[i]
+
+    X.append(np.concatenate((sample1, sample2, sample3, sample4, sample5)))
+    y.append(target)
+
+X = np.array(X)
+y = np.array(y)
+
 
 if OVERFIT:
     X_train = X
@@ -48,11 +62,11 @@ else:
 
 weights = np.array([1 for _ in range(len(X_train))])
 model.update_own_training_set(X_train, y_train, weights)
-model.retrain(verbose=True)
+# model.retrain(verbose=True)
 
 
-# model.model.load_weights('model_overfit_smooth30_switch')
-model.model.save_weights('model_overfit_smooth30_switch_bigger_batch_size_2', verbose=False)
+model.model.load_weights('model_overfit_timeseries')
+# model.model.save_weights('model_overfit_timeseries', verbose=False)
 
 # data = pd.read_csv('long_mission_for_test_set_diff_15.csv', skiprows = 2000, nrows=2800)
 # data = (data - data.min())/(data.max() - data.min())
@@ -63,9 +77,9 @@ test_set_size = len(y_test)
 pred_mean, _ = model.predict(X_test)
 
 # plot 3 figures in one plot below one another for each of the 3 features
-fig, axs = plt.subplots(4, 1, figsize=(10, 10))
+fig, axs = plt.subplots(6, 1, figsize=(10, 10))
 
-for i in range(3):
+for i in range(len(y_test[0])):
     axs[i].plot(y_test[:,i], label='True')
     axs[i].plot(pred_mean[:,i], label='Pred')
 plt.show()

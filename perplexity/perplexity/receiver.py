@@ -11,10 +11,30 @@ from nav_msgs.msg import Odometry
 from thruster_enitech.msg import ThrusterStatus
 
 
+import numpy as np 
+
+SAMPLE_MIN = np.array([-0.386857, -0.243133, -0.263060, -0.114964, -0.082259, -0.116914])
+
+TARGET_MIN = np.array([-70.999994, -74.141587, -87.964594, -75.398224])
+
+SAMPLE_MAX = np.array([0.335678, 0.242716, 0.303403, 0.114743, 0.079477, 0.122234])
+
+TARGET_MAX = np.array([70.371675, 70.371675, 82.309728, 70.999994])
+
+
+# SAMPLE_MIN = np.array([-0.386857, -0.243133, -0.263060, -70.999994, -74.141587, -87.964594, 75.398224])
+
+# TARGET_MIN = np.array([-0.114964, -0.082259, -0.116914])
+
+# SAMPLE_MAX = np.array([0.335678, 0.242716, 0.303403, 70.371675, 70.371675, 82.309728, 70.999994])
+
+# TARGET_MAX = np.array([0.114743, 0.079477, 0.122234])
+
+
 ALLOWED_TIME_DIFFERENCE = 0.1
 PUBLISHER_PERIOD = 0.01
-PUBLISHER_QUEUE_SIZE = 100
-SUBSCRIBER_QUEUE_SIZE = 100
+PUBLISHER_QUEUE_SIZE = 1000
+SUBSCRIBER_QUEUE_SIZE = 1000
 
 
 class Receiver(Node):
@@ -56,6 +76,12 @@ class Receiver(Node):
         msg = KerasReadyTrainingData()
         msg.sample = self._sample
         msg.target = self._target
+        # # take first 3 columns of sample and 3 columns of target
+        # msg.sample = np.concatenate((self._sample[:3], self._target[:3]))
+        # # msg.target = self._target
+        # # take last 4 columns of sample
+        # msg.target = self._target[4:]
+
         msg.header.stamp = self.get_clock().now().to_msg()
         self._publisher_.publish(msg)
         self._have_new_data = False
@@ -64,10 +90,19 @@ class Receiver(Node):
     def synced_callback(self, thruster_surge_left, thruster_surge_right, thruster_sway_front, thruster_sway_rear,  odometry):
         self._sample = odometry.sample
         self._target = odometry.target
-        self._sample[3] = thruster_surge_left.speed
-        self._sample[4] = thruster_surge_right.speed
-        self._sample[5] = thruster_sway_front.speed
-        self._sample[6] = thruster_sway_rear.speed
+        # self._sample[3] = thruster_surge_left.speed
+        # self._sample[4] = thruster_surge_right.speed
+        # self._sample[5] = thruster_sway_front.speed
+        # self._sample[6] = thruster_sway_rear.speed
+        self._target[0] = thruster_surge_left.speed
+        self._target[1] = thruster_surge_right.speed
+        self._target[2] = thruster_sway_front.speed
+        self._target[3] = thruster_sway_rear.speed
+
+        self._sample = (self._sample - SAMPLE_MIN) / (SAMPLE_MAX - SAMPLE_MIN)
+        self._target = (self._target - TARGET_MIN) / (TARGET_MAX - TARGET_MIN)
+
+
         self._have_new_data = True
 
 def main(args=None):
