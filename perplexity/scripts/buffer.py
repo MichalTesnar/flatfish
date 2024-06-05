@@ -1,12 +1,12 @@
 import numpy as np
 
-UNCERTAINTY_COEFFICIENT = 1
-PRIORITY_COEFFICIENT = 0
+UNCERTAINTY_COEFFICIENT = 0
+PRIORITY_COEFFICIENT = 1
 
 class ReplayBuffer():
     def __init__(self, model, capacity, mode='uniform'):
         # self.mode = mode
-        self.mode = "score" # "uniform" or "score"
+        self.mode = "score"
         # self.mode = "uniform"
         self.model = model
         self.capacity = capacity

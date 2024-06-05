@@ -7,18 +7,15 @@ from keras_uncertainty.models import SimpleEnsemble
 import time
 
 experiment_specification = {
-    "EXPERIMENT_IDENTIFIER": f"Flatfish",
-    "NUMBER_OF_LAYERS": 4,
-    "UNITS_PER_LAYER": 64,
+    "EXPERIMENT_IDENTIFIER": "Flatfish",
+    "NUMBER_OF_LAYERS": 2,
+    "UNITS_PER_LAYER": 32,
     "LEARNING_RATE": 10e-3,
-    "BATCH_SIZE": 32,
-    "PATIENCE": 20,
-    "MAX_EPOCHS": 100,
-    # "INPUT_LAYER_SIZE": 3 + 4, # x, y, yaw, 4 thrusters 
-    # "OUTPUT_LAYER_SIZE": 3, # x, y, yaw accelerations
-    "INPUT_LAYER_SIZE": 3 + 3, # x, y, yaw, speeds and accelerations
-    "OUTPUT_LAYER_SIZE": 4, # thrusters
-    "UNCERTAINTY_THRESHOLD": 0.02,
+    "BATCH_SIZE": 50,
+    "PATIENCE": 1,
+    "MAX_EPOCHS": 1,
+    "INPUT_LAYER_SIZE": 6,
+    "OUTPUT_LAYER_SIZE": 4,
     "NUMBER_OF_ESTIMATORS": 10,
 }
 

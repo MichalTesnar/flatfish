@@ -23,19 +23,19 @@ train_data = pd.read_csv('long_mission2_smooth30.csv', nrows=5000)
 # data should be already normalized
 # normalize onto [0, 1]
 # train_data = (train_data - train_data.min())/(train_data.max() - train_data.min())
-# train_data = (train_data - train_data.mean())/(train_data.std())
+train_data = (train_data - train_data.mean())/(train_data.std())
 # train_data = train_data.rolling(window=15).mean()
 # remove nans
 train_data = train_data.dropna()
 
-X = train_data.iloc[:, :FEATURES].values
-y = train_data.iloc[:, FEATURES:].values
+# X = train_data.iloc[:, :FEATURES].values
+# y = train_data.iloc[:, FEATURES:].values
 
-# y_cols = [3, 4, 5, 6]
-# y = train_data.iloc[:, y_cols].values
+y_cols = [3, 4, 5, 6]
+y = train_data.iloc[:, y_cols].values
 
-# X_cols = [0, 1, 2, 7, 8, 9]
-# X = train_data.iloc[:, X_cols].values
+X_cols = [0, 1, 2, 7, 8, 9]
+X = train_data.iloc[:, X_cols].values
 
 if OVERFIT:
     X_train = X
@@ -52,7 +52,7 @@ model.retrain(verbose=True)
 
 
 # model.model.load_weights('model_overfit_smooth30_switch')
-model.model.save_weights('model_overfit_smooth30_switch_bigger_batch_size_2', verbose=False)
+# model.model.save_weights('model_overfit_test_64_units', verbose=False)
 
 # data = pd.read_csv('long_mission_for_test_set_diff_15.csv', skiprows = 2000, nrows=2800)
 # data = (data - data.min())/(data.max() - data.min())

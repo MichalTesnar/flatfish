@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 paths = []
-for file in ["evaluation_metrics-normal.csv", "evaluation_metrics-priority.csv", "evaluation_metrics-uncertainty.csv"]:
+for file in ["evaluation_metrics-normal.csv", "evaluation_metrics-priority.csv", "evaluation_metrics-uncertainty.csv", "evaluation_metrics.csv"]:
 # for file in ["evaluation_metrics-normal.csv"]:
     if os.path.exists(file):
         paths.append(file)
@@ -22,7 +22,10 @@ for csv_path in paths:
 
 
     # Create the plot
-    plt.plot(r2, label=csv_path.split("-")[1].split(".")[0])
+    try:
+        plt.plot(r2, label=csv_path.split("-")[1].split(".")[0])
+    except:
+        plt.plot(r2, label="normal")
 
 # Add legend
 plt.legend()

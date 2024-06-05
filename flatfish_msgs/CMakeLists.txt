@@ -23,6 +23,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/KerasReadyTrainingData.msg"
   "msg/EvaluationMetrics.msg"
   "msg/Dataset.msg"
+  "msg/Buffer.msg"
   LIBRARY_NAME ${PROJECT_NAME}
   DEPENDENCIES std_msgs geometry_msgs
 )

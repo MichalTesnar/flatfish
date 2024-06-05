@@ -1,3 +1,3 @@
-# A command to move multiple joints with a timestamp
+# ready training data from the inferencer
 std_msgs/Header header
-KerasReadyTrainingData[50] dataset
+KerasReadyTrainingData[100] dataset

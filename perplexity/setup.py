@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
                 'receiver = perplexity.receiver:main',
                 'inferencer = perplexity.inferencer:main',
+                'bufferer = perplexity.bufferer:main',
                 'trainer = perplexity.trainer:main',
                 'evaluator = perplexity.evaluator:main',
                 'differentiator = perplexity.differentiator:main',

@@ -11,8 +11,8 @@ import os
 
 CONVERSION_CONSTANT = 1e9
 PUBLISHER_PERIOD = 0.1
-PUBLISHER_QUEUE_SIZE = 1000
-SUBSCRIBER_QUEUE_SIZE = 1000
+PUBLISHER_QUEUE_SIZE = 100
+SUBSCRIBER_QUEUE_SIZE = 100
 FEATURES = 7
 
 
@@ -28,21 +28,20 @@ class EvaluatorNode(Node):
         # self.test_sample = self.data.iloc[:, :FEATURES].values
         # self.test_target = self.data.iloc[:, FEATURES:].values
 
-
         X_cols = [0, 1, 2, 7, 8, 9]
         self.test_sample = self.data.iloc[:, X_cols].values
         y_cols = [3, 4, 5, 6]
         self.test_target = self.data.iloc[:, y_cols].values
-
-
-
-
-
         self.test_set_size = len(self.test_sample)
 
         # create new file to write mse and r2 into
         # Open a CSV file in write mode
-        csv_file = open('evaluation_metrics.csv', 'w', newline='')
+
+
+        file_number = 0
+        while os.path.exists(f'evaluation_metrics_{file_number}.csv'):
+            file_number += 1
+        csv_file = open(f'evaluation_metrics_{file_number}.csv', 'w', newline='')
         self.csv_writer = csv.writer(csv_file)
 
         self.model_weights_subscription = self.create_subscription(

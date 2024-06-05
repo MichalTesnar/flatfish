@@ -13,12 +13,12 @@ CONVERSION_CONSTANT = 1e9
 NORMALIZE_THRUSTERS = 65
 DERIVATIVE_QUEUE_SIZE = 5
 PUBLISHER_PERIOD = 0.01
-SUBSCRIBER_QUEUE_SIZE = 1000
-PUBLISHER_QUEUE_SIZE = 1000
+SUBSCRIBER_QUEUE_SIZE = 100
+PUBLISHER_QUEUE_SIZE = 100
 
 TRAINING_THRESHOLD = 0
-TRAINING_COUNTER = 50
-QUEUE_SIZE = 100
+TRAINING_COUNTER = 100
+QUEUE_SIZE = 500
 
 TRAINING_SET_SIZE = TRAINING_COUNTER
 
@@ -26,7 +26,7 @@ class InferenceNode(Node):
     def __init__(self):
         super().__init__('inferencer')
         self.model = AIOModel()
-        self.buffer = ReplayBuffer(self.model, QUEUE_SIZE, mode='score') # "score" or "uniform"
+        self.buffer = ReplayBuffer(self.model, QUEUE_SIZE)
         self.counter = 0
         self.episode_counter = 0
 
