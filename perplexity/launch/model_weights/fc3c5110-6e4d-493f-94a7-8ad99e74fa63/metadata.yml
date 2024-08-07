@@ -1,0 +1,11 @@
+model_weights:
+  0: ensemble-weights-0.hdf5
+  1: ensemble-weights-1.hdf5
+  2: ensemble-weights-2.hdf5
+  3: ensemble-weights-3.hdf5
+  4: ensemble-weights-4.hdf5
+  5: ensemble-weights-5.hdf5
+  6: ensemble-weights-6.hdf5
+  7: ensemble-weights-7.hdf5
+  8: ensemble-weights-8.hdf5
+  9: ensemble-weights-9.hdf5

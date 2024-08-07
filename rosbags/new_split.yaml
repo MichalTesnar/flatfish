@@ -1,0 +1,12 @@
+output_bags:
+  - uri: 'gathered_long_mission_p1'
+    storage_options:
+      storage_id: 'sqlite3'
+    record_options:
+      start_time: 0
+      duration: 360
+  - uri: 'gathered_long_mission_p2'
+    storage_options:
+      storage_id: 'sqlite3'
+    record_options:
+      start_time: 360

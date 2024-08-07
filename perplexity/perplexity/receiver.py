@@ -1,10 +1,8 @@
 import rclpy
 from rclpy.node import Node
 import message_filters
-from math import isnan
 
-from flatfish_msgs.msg import TrainingData, KerasReadyTrainingData
-from nav_msgs.msg import Odometry
+from flatfish_msgs.msg import KerasReadyTrainingData
 
 # from flatfish_msgs.msg import ThrusterStatus # use if working locally
 # use if working running on flatfish
@@ -76,11 +74,6 @@ class Receiver(Node):
         msg = KerasReadyTrainingData()
         msg.sample = self._sample
         msg.target = self._target
-        # # take first 3 columns of sample and 3 columns of target
-        # msg.sample = np.concatenate((self._sample[:3], self._target[:3]))
-        # # msg.target = self._target
-        # # take last 4 columns of sample
-        # msg.target = self._target[4:]
 
         msg.header.stamp = self.get_clock().now().to_msg()
         self._publisher_.publish(msg)

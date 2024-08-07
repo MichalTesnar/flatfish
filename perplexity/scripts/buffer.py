@@ -1,22 +1,32 @@
 import numpy as np
 
-UNCERTAINTY_COEFFICIENT = 0
-PRIORITY_COEFFICIENT = 1
-
 class ReplayBuffer():
-    def __init__(self, model, capacity, mode='uniform'):
-        # self.mode = mode
-        self.mode = "score"
-        # self.mode = "uniform"
+    def __init__(self, model, capacity):
+        mode = "uncertainty"
+        # mode = "priority"
+        # mode = "uniform"
+
+        if mode == 'uncertainty':
+            self.mode = 'score'
+            self.uncertainty_coefficient = 1
+            self.priority_coefficient = 0
+        elif mode == 'priority':
+            self.mode = 'score'
+            self.uncertainty_coefficient = 0
+            self.priority_coefficient = 1
+        elif mode == 'uniform':
+            self.mode = 'uniform'
+
         self.model = model
         self.capacity = capacity
         self.buffer = []
         self.position = 0
 
-        self.alpha = 0.7
+        # self.alpha = 0.7
+        self.alpha = 1
         self.epsilon = 1e-5
         
-        self.beta_schedule = lambda episode: min(1.0, 0.4 + episode * (1.0 - 0.4) / 1000)  # linear schedule
+        self.beta_schedule = lambda episode: min(1.0, 0.4 + episode * (1.0 - 0.4) / 70)  # linear schedule
 
     def push(self, sample):
         if len(self.buffer) < self.capacity:
@@ -44,7 +54,7 @@ class ReplayBuffer():
                 uncertainty = float(np.mean(pred_std))
                 priority = float(np.sum(np.square(target - pred_mean)))
                 
-                score = PRIORITY_COEFFICIENT * priority + UNCERTAINTY_COEFFICIENT * uncertainty
+                score = self.priority_coefficient * priority + self.uncertainty_coefficient * uncertainty
 
                 scores[i] = np.abs(score) + self.epsilon
 
@@ -54,8 +64,8 @@ class ReplayBuffer():
 
             indices = np.random.choice(len(self.buffer), size=batch_size, p=probabilities)
             samples = [self.buffer[i] for i in indices]
-            # weights = (len(self.buffer) * probabilities[indices]) ** (-beta)
-            weights = probabilities[indices]
+            weights = (len(self.buffer) * probabilities[indices]) ** (-beta)
+            # weights = probabilities[indices]
             weights /= weights.max()     # normalize weights
             maximum_score = np.max(scores[indices])
             return samples, weights, maximum_score

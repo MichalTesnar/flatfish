@@ -8,12 +8,12 @@ import time
 
 experiment_specification = {
     "EXPERIMENT_IDENTIFIER": "Flatfish",
-    "NUMBER_OF_LAYERS": 2,
+    "NUMBER_OF_LAYERS": 4,
     "UNITS_PER_LAYER": 32,
     "LEARNING_RATE": 10e-3,
-    "BATCH_SIZE": 50,
-    "PATIENCE": 1,
-    "MAX_EPOCHS": 1,
+    "BATCH_SIZE": 100,
+    "PATIENCE": 100,
+    "MAX_EPOCHS": 10,
     "INPUT_LAYER_SIZE": 6,
     "OUTPUT_LAYER_SIZE": 4,
     "NUMBER_OF_ESTIMATORS": 10,

@@ -1,17 +1,11 @@
 from uq_model import AIOModel
 from buffer import ReplayBuffer
-from tensorflow.keras import models
 import rclpy
 from rclpy.node import Node
-from rclpy.time import Time
 from flatfish_msgs.msg import ModelWeights, Dataset, KerasReadyTrainingData
-from shutil import rmtree
 import numpy as np
 
 
-CONVERSION_CONSTANT = 1e9
-NORMALIZE_THRUSTERS = 65
-DERIVATIVE_QUEUE_SIZE = 5
 PUBLISHER_PERIOD = 0.01
 SUBSCRIBER_QUEUE_SIZE = 100
 PUBLISHER_QUEUE_SIZE = 100
@@ -26,6 +20,7 @@ class InferenceNode(Node):
     def __init__(self):
         super().__init__('inferencer')
         self.model = AIOModel()
+
         self.buffer = ReplayBuffer(self.model, QUEUE_SIZE)
         self.counter = 0
         self.episode_counter = 0
